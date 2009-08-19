@@ -1,9 +1,8 @@
 <?php
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Association.php';
 class HasOne extends Association {
   function __construct(&$source, $dest, $options=null) {
     parent::__construct($source, $dest, $options);
-    $this->foreign_key = Inflector::foreign_key($this->source_class);
+    $this->foreign_key = ActiveRecordInflector::foreign_key($this->source_class);
   }
 
   function set($value, &$source) {
@@ -35,8 +34,8 @@ class HasOne extends Association {
   }
 
   function join() {
-    $dest_table = Inflector::tableize($this->dest_class);
-    $source_table = Inflector::tableize($this->source_class);
+    $dest_table = ActiveRecordInflector::tableize($this->dest_class);
+    $source_table = ActiveRecordInflector::tableize($this->source_class);
     $source_inst = new $this->source_class;
     $dest_inst = new $this->dest_class;
     $columns = $dest_inst->get_columns();

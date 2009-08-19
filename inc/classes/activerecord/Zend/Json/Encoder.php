@@ -22,7 +22,7 @@
 /**
  * Zend_Json_Exception
  */
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Exception.php';
+require_once 'Exception.php';
 
 
 /**

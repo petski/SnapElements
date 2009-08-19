@@ -1,15 +1,14 @@
 <?php
-require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Association.php';
 class HasMany extends Association {
   function __construct(&$source, $dest, $options=null) {
     parent::__construct($source, $dest, $options);
-    $this->foreign_key = Inflector::foreign_key($this->source_class);
+    $this->foreign_key = ActiveRecordInflector::foreign_key($this->source_class);
   }
 
   function push($args, &$source) {
     foreach ($args as $object) {
       if (($source->is_new_record() || $object->is_new_record())
-                                    && $this->options['through'])
+              && isset($this->options['through']) && $this->options['through'])
         throw new ActiveRecordException("HasManyThroughCantAssociateNewRecords", ActiveRecordException::HasManyThroughCantAssociateNewRecords);
       if (!$object instanceof $this->dest_class) {
         throw new ActiveRecordException("Expected class: {$this->dest_class}; Received: ".get_class($object), ActiveRecordException::UnexpectedClass);
@@ -18,7 +17,7 @@ class HasMany extends Association {
         /* we want to save $object after $source gets saved */
         $object->set_modified(true);
       }
-      elseif (!$this->options['through']) {
+      elseif (!isset($this->options['through']) || !$this->options['through']) {
         /* since source exists, we always want to save $object */
         $object->{$this->foreign_key} = $source->{$source->get_primary_key()};
         $this->get($source);
@@ -31,9 +30,9 @@ class HasMany extends Association {
         foreach ($this->value as $val)
           if ($val == $object) $skip = true;
         if (!$skip) {
-          $through_class = Inflector::classify($this->options['through']);
-          $fk_1 = Inflector::foreign_key($this->dest_class);
-          $fk_2 = Inflector::foreign_key($this->source_class);
+          $through_class = ActiveRecordInflector::classify($this->options['through']);
+          $fk_1 = ActiveRecordInflector::foreign_key($this->dest_class);
+          $fk_2 = ActiveRecordInflector::foreign_key($this->source_class);
           $k1   = $object->{$object->get_primary_key()};
           $k2   = $source->{$source->get_primary_key()};
           $through = new $through_class( array($fk_1 => $k1, $fk_2 => $k2) );
@@ -52,7 +51,7 @@ class HasMany extends Association {
         return $this->value; 
       }
       try {
-        if (!$this->options['through']) {
+        if (!isset($this->options['through']) || !$this->options['through']) {
           $collection = call_user_func_array(array($this->dest_class, 'find'),
             array('all',
               array('conditions' => "{$this->foreign_key} = ".$source->{$source->get_primary_key()})));
@@ -108,7 +107,7 @@ class HasMany extends Association {
   */
   function break_up($objects, &$source) {
     foreach ($objects as $object) {
-      if ($this->options['dependent'] == 'destroy')
+      if (isset($this->options['dependent']) && $this->options['dependent'] == 'destroy')
         $object->destroy();
       else {
         if (!$this->options['through']) {
@@ -116,9 +115,9 @@ class HasMany extends Association {
           $object->save();
         }
         else {
-          $through_class = Inflector::classify($this->options['through']);
-          $fk_1 = Inflector::foreign_key($this->dest_class);
-          $fk_2 = Inflector::foreign_key($this->source_class);
+          $through_class = ActiveRecordInflector::classify($this->options['through']);
+          $fk_1 = ActiveRecordInflector::foreign_key($this->dest_class);
+          $fk_2 = ActiveRecordInflector::foreign_key($this->source_class);
           $k1   = $object->{$object->get_primary_key()};
           $k2   = $source->{$source->get_primary_key()};
           $through = call_user_func_array(array($through_class, 'find'),
@@ -131,12 +130,12 @@ class HasMany extends Association {
   }
 
   function join() {
-    $dest_table = Inflector::tableize($this->dest_class);
-    $source_table = Inflector::tableize($this->source_class);
+    $dest_table = ActiveRecordInflector::tableize($this->dest_class);
+    $source_table = ActiveRecordInflector::tableize($this->source_class);
     $source_inst = new $this->source_class;
     $dest_inst = new $this->dest_class;
     $columns = $dest_inst->get_columns();
-    if (!$this->options['through']) {
+    if (!isset($this->options['through']) || !$this->options['through']) {
       $join = "LEFT OUTER JOIN $dest_table ON "
             . "$dest_table.{$this->foreign_key} = $source_table.".$source_inst->get_primary_key();
     }
@@ -144,7 +143,7 @@ class HasMany extends Association {
       $join = "LEFT OUTER JOIN {$this->options['through']} ON "
             . "{$this->options['through']}.{$this->foreign_key} = $source_table.".$source_inst->get_primary_key() ." "
             . "LEFT OUTER JOIN $dest_table ON "
-            . "$dest_table.".$dest_inst->get_primary_key() ." = {$this->options['through']}." . Inflector::foreign_key($this->dest_class);
+            . "$dest_table.".$dest_inst->get_primary_key() ." = {$this->options['through']}." . ActiveRecordInflector::foreign_key($this->dest_class);
     }
     return array( array($dest_table => $columns), $join);
   }
@@ -176,7 +175,7 @@ class HasMany extends Association {
   function save_as_needed($source) {
     foreach ($this->value as $object) {
       if ($object->is_modified() || $object->is_new_record()) {
-        if (!$this->options['through'])
+        if (!isset($this->options['through']) || !$this->options['through'])
           $object->{$this->foreign_key} = $source->{$source->get_primary_key()};
         $object->save();
       }
