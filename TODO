@@ -22,3 +22,8 @@
 - use the http://famfamfam.com/ icons
 
 - Forms submit via '<form onsubmit'>. 
+
+- create support for users
+
+- create support for groups, add users to a group, add zones to a group instead of adding to a user. 
+  This way all members of a group are able to edit and update their zones.
