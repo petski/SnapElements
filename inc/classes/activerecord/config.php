@@ -2,10 +2,10 @@
 
 define('AR_ADAPTER', 'MySQL'); // could be 'PDO'
 define('AR_DRIVER',  'mysql');
-define('AR_HOST',    '127.0.0.1');
-define('AR_DB',      'pdns_ext');
-define('AR_USER',    'poweradmin');
-define('AR_PASS',    'KJjdmsk767&^2jddgjhsdf');
+define('AR_HOST',    '<your_host>');
+define('AR_DB',      '<your_db>');
+define('AR_USER',    '<your_dbuser>');
+define('AR_PASS',    '<your_secret>');
 
 #define('AR_PREFIX', 'prefix_');
 
