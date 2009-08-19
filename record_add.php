@@ -22,7 +22,7 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 	function queue_record_add(form) {
 
 		var myhash = new Hash();
-		['domain_id','domain_name', 'name', 'content', 'ttl', 'prio'].each(function(k) {
+		['domain_id', 'domain_name', 'name', 'type', 'content', 'ttl', 'prio'].each(function(k) {
 			if(form[k] !== undefined) {
 				  myhash.set(k, form[k].getValue());
 			} 

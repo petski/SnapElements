@@ -1,6 +1,7 @@
 <?php
 require_once('base.php');
 require_once($class_root . 'Domain.php');
+require_once($class_root . 'Record.php');
 
 print $display->header();
 
