@@ -7,9 +7,9 @@ $settings = array(
 	'db.name'               => '',
 	'db.type'               => '',
 
-	'dns.hostmaster'        => '',
-	'dns.ns1'               => '',
-	'dns.ns2'               => '',
+	'dns.hostmaster'        => 'postmaster.example.com',
+	'dns.ns1'               => 'ns1.example.com',
+	'dns.ns2'               => 'ns2.example.com',
 );
 
 ?>

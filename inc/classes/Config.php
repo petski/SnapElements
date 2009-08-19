@@ -12,10 +12,15 @@ class Config {
                         'iface.rowamount'       => '50',
                         'iface.expire'          => '1800',
 
-                        'dns.hostmaster'        => '',
-                        'dns.ns1'               => '',
-                        'dns.ns2'               => '',
+                        'dns.hostmaster'        => 'postmaster',
+                        'dns.ns1'               => 'ns1.example.com',
+                        'dns.ns2'               => 'ns2.example.com',
+                        'dns.serial'            => '2009081901',
                         'dns.ttl'               => '86400',
+                        'dns.refresh'           => '28800',
+                        'dns.retry'             => '7200',
+                        'dns.expire'            => '1814400',
+                        'dns.minimum'           => '86400',
                         'dns.fancy'             => false,
                         'dns.strict_tld_check'  => true,
 

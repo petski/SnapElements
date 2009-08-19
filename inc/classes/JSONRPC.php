@@ -23,7 +23,16 @@ class JSONRPC {
 			$domain_id = $p->domain_id;
 		} elseif (isSet($p->domain_name)) {
 			$d = Domain::find('first', array('conditions' => "name = '$p->domain_name'"));
-			$domain_id = $d->id;
+			/*
+			 * Check if we didn't get an empty id for our domain Object. 
+			 * This could happen when you try to commit a new record, while
+			 * changes for the new domain are still pending.
+			 */
+			if($d->id != NULL) {
+				$domain_id = $d->id;
+			} else {
+				array_push($errors, 'Domain not found!');
+			}
 		} else {
 			/*
 			 * Throw some error

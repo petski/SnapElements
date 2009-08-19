@@ -38,7 +38,18 @@ if($_POST['submit']) {
 					'change' => json_encode(array('name' => $_POST['name'], 'type' => $_POST['type'])),
 				));
 		$queue->save();
-		header('Location: record_add.php?domain_name='.$_POST['name'].'&template=new_domain');
+		/*
+		 * TODO fix this nasty way of hacking a static SOA for record_add.php
+		 */
+		$newSOA = $config->get('dns.ns1') . " " 
+			. $config->get('dns.hostmaster') ." "
+			. $config->get('dns.serial') ." "
+			. $config->get('dns.refresh') ." " 
+			. $config->get('dns.retry') ." "
+			. $config->get('dns.expire') ." "
+			. $config->get('dns.minimum'); 
+		print "$newSOA";
+		header('Location: record_add.php?domain_name='.$_POST['name'].'&template=new_domain&soa='.$newSOA);
 		exit;
 	}
 } 
