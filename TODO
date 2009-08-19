@@ -1,0 +1,24 @@
+- Record.php and Domain.php share some methods, 
+  I would like to mixin these methods from some other class (, but multiple inheritance isn't supported by PHP).
+  - http://www.scriptorama.nl/tips-tricks/re-mixins-in-php
+  - http://loveandtheft.org/2008/03/22/php-style-mixins/
+
+- Zone should be erased when Domain is destroyed
+
+- cd /tmp/activerecord && svn update &&
+  diff -uBb /tmp/activerecord/ ~pkuijv/public_html/petje/inc/classes/activerecord/ --exclude=config.php --exclude=.svn > /tmp/activerecord.diff
+  and commit diff to luke baker. (PK 2008/07/22 : Done, emailed luke@lukebaker.org)
+
+- domain_list.php outputs wrong username (domain.account should be NULL, domain -> zone -> user should be the owner).
+
+- images should all be 16x16 png's ! Not gif's!
+
+- validate html for each page
+
+- example for type in record_add.php
+
+- do something with http://particletree.com/features/rediscovering-the-button-element/ 
+
+- use the http://famfamfam.com/ icons
+
+- Forms submit via '<form onsubmit'>. 
