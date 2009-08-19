@@ -17,13 +17,8 @@ class JSONRPC {
 	} 
 
 	public function record_add($p) { 
-	/*
-	 * FIXME CHECK IF domain_id exists or domain_name and query for domain than create new Record obj 
-	 *
-	 */
 		$errors = array();
 		$domain_id = "";
-		var_dump($p);
 		if(isSet($p->domain_id)) {
 			$domain_id = $p->domain_id;
 		} elseif (isSet($p->domain_name)) {
