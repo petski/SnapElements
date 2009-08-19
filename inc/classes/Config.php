@@ -23,7 +23,7 @@ class Config {
 
                         'application.version' 	=> '0.1',
                         'application.revision'	=> '$Id$',
-                        'application.name'	=> 'Petje\'s PowerAdmin',
+                        'application.name'	=> 'SnapElements',
         );
 
         public function get($name) {
