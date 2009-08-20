@@ -9,10 +9,10 @@ print $display->header();
 function commit(id, method, change) { 
         //
 	//TODO find a nicer way of doing unescape, since it kills white spaces 
-        //which are needed for SOA,NAPTR,etc.. records 
+        //which are needed for SOA,NAPTR,etc.. records.
+        //Not using unescape kills adding A records :(
 	//
-	//var params = unescape(change);
-	var params = change;
+	var params = unescape(change);
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
 			  parameters: {"jsonrpc": "2.0", "method": method, "params": params , "id": 1},
