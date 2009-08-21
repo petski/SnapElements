@@ -10,6 +10,11 @@ class JSONRPC {
 		return count(Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0')));
 	} 
 
+	public function queue_delete($p) { 
+		$q = Queue::find($p);
+		return $q->destroy();
+	}
+
 	public function domain_add($p) { 
 		$d = new Domain(array('name' => $p->name, 'type' => $p->type));
 		$d->save();

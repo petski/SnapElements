@@ -22,6 +22,19 @@ function commit(id, method, change) {
                         });
 }
 
+function queue_delete(id) {
+	alert(id);
+	new Ajax.Request('api/jsonrpc.php', {
+                          method: 'post',
+			  parameters: {"jsonrpc": "2.0", "method": "queue_delete", "params": id , "id": 1},
+                          onSuccess: function(r) {
+					$('tr_entry' + id).toggleClassName('queue_commited');
+					$('action_entry' + id).update('Removed from queue');
+					queue_counter();
+                          }
+                        });
+}
+
 function commit_successfull(id) { 
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
@@ -69,6 +82,7 @@ __EOS__;
 			<td>$entry->change</td>
 			<td id="action_entry{$entry->id}">
 				<button onclick="commit($entry->id, '{$entry->function}','{$change_encoded}'); return false;">Commit</button>
+				<button onclick="queue_delete($entry->id); return false;">Delete</button>
 			</td>
 		</tr>
 __EOS__;
