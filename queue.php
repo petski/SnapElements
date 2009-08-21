@@ -23,7 +23,6 @@ function commit(id, method, change) {
 }
 
 function queue_delete(id) {
-	alert(id);
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
 			  parameters: {"jsonrpc": "2.0", "method": "queue_delete", "params": id , "id": 1},
