@@ -21,6 +21,20 @@ class JSONRPC {
 		return $d->id;
 	} 
 
+	public function queue_domain_delete($p) { 
+		# Validate record (foreach ... bla bla)
+		$q = new Queue(array(
+			'change_date' => date("Y-m-d\TH:i:s"),
+			'archived' => 0,
+			'user_id' => 1,
+			'user_name' => 'henkie',
+			'function' => 'domain_delete',
+			'change' => json_encode($p),
+			));
+		$q->save();
+		return $q->id;
+	}
+
 	public function record_add($p) { 
 		$errors = array();
 		$domain_id = "";

@@ -4,7 +4,23 @@ require_once($class_root . 'Domain.php');
 require_once($class_root . 'Queue.php');
 
 print $display->header();
+?>
 
+<script type="text/javascript">
+	function domain_delete(id, name) {
+		new Ajax.Request('api/jsonrpc.php', {
+			method: 'post',
+			parameters: {"jsonrpc": "2.0", "method": 'queue_domain_delete', "params": name , "id": 1},
+			onSuccess: function(r) {
+					$('tr_entry' + id).toggleClassName('queue_commited');
+					$('action_entry' + id).update('Added removal request to queue');
+					queue_counter();
+			}
+		});
+	}
+</script>
+
+<?php
 #
 #
 #

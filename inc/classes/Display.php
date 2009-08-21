@@ -9,12 +9,10 @@ class Display {
 	public $pages = array(
 				'index.php' => array('name' => 'Home', 'menu' => true),
 				'search.php' => array('name' => 'Search domains and records', 'menu' => true),
-				'domain_list.php' => array('name' => 'List domains', 'menu' => true),
 				'domain_add.php' => array('name' => 'Add domain', 'menu' => true),
-				'queue.php' => array('name' => 'Queue', 'menu' => true),
-
+				'domain_list.php' => array('name' => 'List domains', 'menu' => true),
 				'domain_edit.php' => array('name' => 'Edit domain', 'menu' => false),
-				'domain_delete.php' => array('name' => 'Delete domain', 'menu' => false),
+				'queue.php' => array('name' => 'Queue', 'menu' => true),
 				'record_add.php' => array('name' => 'Add record(s)', menu => false),
 				'record_list.php' => array('name' => 'Record list', menu => false),
 	);
@@ -78,12 +76,12 @@ __EOS__;
 __EOS__;
 	} 
 
-	public function button($type = 'edit') { 
-		return '<img src="images/'.$type.'.gif" title="'.$type.'" alt="'.$type.'" width="16" height="16">';
+	public function button($type = 'edit', $onclick = '') { 
+		return sprintf('<img src="images/%s.gif" title="%s" alt="%s" width="16" height="16">', $type, $type, $type);
 	} 
 
-	public function link($href = '', $content ='') { 
-		return sprintf('<a href="%s">%s</a>',$href,$content);
+	public function link($href = '', $content = '', $onclick = '') { 
+		return sprintf('<a href="%s"%s>%s</a>',$href, $onclick != '' ? sprintf(' onclick="%s"', $onclick) : '', $content);
 	} 
 
 	public function error($txt = '') {
@@ -148,14 +146,14 @@ __EOS__;
 		$domain = (object)$domain;
 
 		return <<< __EOS__
-		       <tr class="domain">
+		       <tr class="domain" id="tr_entry{$domain->id}">
 			       <td>$domain->name</td>
 			       <td>$domain->type</td>
 			       <td>$domain->record_count</td>
 			       <td>xx</td>
-			       <td>
+			       <td id="action_entry{$domain->id}">
 				       {$this->link('domain_edit.php?id='.$domain->id,$this->button('edit'))}
-				       {$this->link('domain_delete.php?id='.$domain->id,$this->button('delete'))}
+				       {$this->link('#',$this->button('delete'), "domain_delete($domain->id, '$domain->name')")}
 				       {$this->link('record_list.php?id='.$domain->id,$this->button('view'))}
 			       </td>
 		       </tr>
