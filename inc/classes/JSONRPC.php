@@ -21,6 +21,41 @@ class JSONRPC {
 		return $d->id;
 	} 
 
+	public function queue_domain_add($p) { 
+
+		if(! Domain::is_valid('name', $p->name)) { 
+			throw new Exception("Name is not valid");
+		} 
+
+		if(! Domain::is_valid('type', $p->type)) { 
+			throw new Exception("You hacker!");
+		}
+		
+		# Shouldn't be a existing domain
+		if(Domain::find('first', array('conditions' => 'name = '.Domain::quote($p->name)))) {
+			throw new Exception("Domain already exists!");
+		} 
+
+		# Shouldn't be a pending (domain_add) change for this domain.
+		$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0 AND function="domain_add"'));
+		foreach($qFindResult as $entry) { 
+			if(with(json_decode($entry->change))->{'name'} == $p->name) { 
+				throw new Exception('Already pending change for this domain!');
+			} 
+		} 
+
+		$q = new Queue(array(
+			'change_date' => date("Y-m-d\TH:i:s"),
+			'archived' => 0,
+			'user_id' => 1,
+			'user_name' => 'henkie',
+			'function' => 'domain_add',
+			'change' => json_encode($p),
+			));
+		$q->save();
+		return $q->id;
+	} 
+
 	public function queue_domain_delete($p) { 
 		# Validate record (foreach ... bla bla)
 		$q = new Queue(array(

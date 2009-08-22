@@ -1,72 +1,47 @@
 <?php
 require_once('base.php');
 require_once($class_root . 'Domain.php');
-require_once($class_root . 'Queue.php');
-
-$errors = array();
-
-if($_POST['submit']) { 
-
-	if(! Domain::is_valid('name', $_POST['name'])) { 
-		array_push($errors, 'Name not valid!');
-	} 
-
-	if(! Domain::is_valid('type', $_POST['type'])) { 
-		array_push($errors, 'You hacker!');
-	} 
-	
-	# Shouldn't be a existing domain
-	if(Domain::find('first', array('conditions' => 'name = '.Domain::quote($_POST['name'])))) {
-		array_push($errors, 'Domain already exists!');
-	} 
-
-	# Shouldn't be a pending (domain_add) change for this domain.
-	$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0 AND function="domain_add"'));
-	foreach($qFindResult as $entry) { 
-		if(with(json_decode($entry->change))->{'name'} == $_POST['name']) { 
-			array_push($errors, 'Already pending change for this domain!');
-		} 
-	} 
-
-	if(count($errors) == 0) { 
-		$queue = new Queue(array(
-					'change_date' => date("Y-m-d\TH:i:s"),
-					'archived' => 0,
-					'user_id' => 1,			# TODO
-					'user_name' => 'henkie',	# TODO
-					'function' => basename(__FILE__,'.php'),
-					'change' => json_encode(array('name' => $_POST['name'], 'type' => $_POST['type'])),
-				));
-		$queue->save();
-		/*
-		 * TODO fix this nasty way of hacking a static SOA for record_add.php
-		 */
-		$newSOA = $config->get('dns.ns1') . " " 
-			. $config->get('dns.hostmaster') ." "
-			. $config->get('dns.serial') ." "
-			. $config->get('dns.refresh') ." " 
-			. $config->get('dns.retry') ." "
-			. $config->get('dns.expire') ." "
-			. $config->get('dns.minimum'); 
-		print "$newSOA";
-		header('Location: record_add.php?domain_name='.$_POST['name'].'&template=new_domain&soa='.$newSOA);
-		exit;
-	}
-} 
 
 print $display->header();
-
-foreach($errors as $error) { 
-	print $display->error($error);
-} 
 
 ?>
 
 <script type="text/javascript">
 	document.observe("dom:loaded", function() { Form.focusFirstElement($('addform')); });
+
+	function queue_domain_add(id) {
+                var myhash = new Hash();
+                ['name', 'type'].each(function(k) {
+                        if($(id)[k] !== undefined) {
+                                  myhash.set(k, $(id)[k].getValue());
+                        } 
+                });
+
+                var params = myhash.toJSON();
+		//window.params = params;
+
+                new Ajax.Request('api/jsonrpc.php', {
+                                  method: 'post',
+                                  parameters: {"jsonrpc": "2.0", "method": 'queue_domain_add', "params": params , "id": 1},
+                                  onSuccess: function(r) {
+					var json = r.responseText.evalJSON();
+					if(json.error) { 
+						$('feedback').update(json.error.message + ' (' + json.error.code + ')').
+							setStyle({color: 'red', display: 'block'});
+					}
+					else {
+						$('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
+						window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
+					}
+                                  }
+                });
+
+        } 
 </script>
 
-<form method="POST" name="addform" id="addform">
+<div id="feedback" style="display: none;"></div>
+
+<form name="addform" id="addform" onSubmit="queue_domain_add(this.id); return false;">
 	<table>
 	<tr class="domain">
 		<td><div class="header">Name</div></td>
