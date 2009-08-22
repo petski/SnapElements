@@ -10,7 +10,7 @@ print $display->header();
 	function domain_delete(id, name) {
 		new Ajax.Request('api/jsonrpc.php', {
 			method: 'post',
-			parameters: {"jsonrpc": "2.0", "method": 'queue_domain_delete', "params": name , "id": 1},
+			parameters: {"jsonrpc": "2.0", "method": 'queue_domain_delete', "params": new Hash({'name' : name}).toJSON() , "id": 1},
 			onSuccess: function(r) {
 					$('tr_entry' + id).toggleClassName('queue_commited');
 					$('action_entry' + id).update('Added removal request to queue');
