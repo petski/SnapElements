@@ -86,9 +86,19 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 
 	function load_template(template) { 
 		var domain_name = $('form0')['domain_name'].value;
-		var soa = $('form0')['soa'].value;
 		if(template == 'new_domain') { 
-			fill_form('form0',   new Hash({'name' : domain_name, 'type' : 'SOA', 'content' : soa}));
+			<?php 
+			$soa = join(" ", array( 
+						$config->get('dns.ns1'),
+						$config->get('dns.hostmaster'),
+						$config->get('dns.serial'),
+						$config->get('dns.refresh'),
+						$config->get('dns.retry'),
+						$config->get('dns.expire'),
+						$config->get('dns.minimum') 
+			));
+			?>
+			fill_form('form0',   new Hash({'name' : domain_name, 'type' : 'SOA', 'content' : '<?php echo $soa; ?>'}));
 			fill_form(add_row(), new Hash({'name' : domain_name, 'type' : 'A', 'content': '<your ipaddress>'}));
 			fill_form(add_row(), new Hash({'name' : 'www.' + domain_name, 'type' : 'CNAME', 'content' : domain_name}));
 			fill_form(add_row(), new Hash({'name' : 'mail.' + domain_name, 'type' : 'CNAME', 'content' : domain_name}));
@@ -112,7 +122,6 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 
 <form action="javascript:void(0);" onsubmit="return false;" id="form0">
 <input type="hidden" name="<?php echo $default_key; ?>" value="<?php echo $_GET[$default_key]; ?>">
-<input type="hidden" name="soa" value="<?php echo $_GET['soa']; ?>">
 <table>
 <tr>
  <th>Name</th>
