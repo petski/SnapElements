@@ -34,11 +34,20 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 				  method: 'post',
 				  parameters: {"jsonrpc": "2.0", "method": 'queue_record_add', "params": params , "id": 1},
 				  onSuccess: function(r) {
+					var json = r.responseText.evalJSON();
+                                        if(json.error) {
+                                                $('feedback').update(json.error.message + ' (' + json.error.code + ')').
+                                                        setStyle({color: 'red', display: 'block'});
+                                        }
+                                        else {
+                                                $('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
+                                                //window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
 						queue_counter();
 						form[form.disabled ? 'enable' : 'disable']();
 						form.disabled = !form.disabled;
 						form.getElementsByTagName('button')[0].writeAttribute( { 'disabled': true } );
 						form.getElementsByTagName('button')[1].writeAttribute( { 'disabled': true } );
+					}
 				  }
 				});
 
@@ -119,6 +128,8 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 	?>
 
 </script>
+
+<div id="feedback" style="display: none;"></div>
 
 <form action="javascript:void(0);" onsubmit="return false;" id="form0">
 <input type="hidden" name="<?php echo $default_key; ?>" value="<?php echo $_GET[$default_key]; ?>">

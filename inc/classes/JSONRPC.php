@@ -10,6 +10,12 @@ class JSONRPC {
 		return count(Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0')));
 	} 
 
+        public function queue_entry_commited($p) {
+                $q = Queue::find($p);
+                $q->commit_date = date("Y-m-d\TH:i:s");
+                $q->save();
+        }
+
 	public function queue_delete($p) { 
 		$q = Queue::find($p);
 		return $q->destroy();
@@ -86,12 +92,14 @@ class JSONRPC {
 				$domain_id = $d->id;
 			} else {
 				array_push($errors, 'Domain not found!');
+				//throw new Exception("Domain not found!");
 			}
 		} else {
 			/*
 			 * Throw some error
 			 */
 			array_push($errors, 'No domain_id or domain_name found!');
+			//throw new Exception("No domain_id or domain_name found!");
 		}
 
 		if(count($errors) == 0) {
@@ -110,14 +118,50 @@ class JSONRPC {
 		}
 	}
 
-	public function queue_entry_commited($p) { 
-		$q = Queue::find($p);
-		$q->commit_date = date("Y-m-d\TH:i:s");
-		$q->save();
-	}
-
 	public function queue_record_add($p) { 
-		# Validate record (foreach ... bla bla)
+		# Shouldn't be a existing record
+		if(Record::find('first', array('conditions' => 
+					'name = '.Record::quote($p->name) . 
+					' AND type = '. Record::quote($p->type) . 
+					' AND content = '. Record::quote($p->content)
+					))) 
+		{ 
+			throw new Exception("Record already exists!");
+		}
+
+		# Shouldn't be a pending (record_add) change for this domain.
+		$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0 AND function="record_add"'));
+		foreach($qFindResult as $entry) {
+			if(with(json_decode($entry->change))->{'name'} == $p->name &&
+				(with(json_decode($entry->change))->{'type'} == $p->type) &&
+				(with(json_decode($entry->change))->{'content'} == $p->content) )
+                        {
+				throw new Exception('Already pending change for this record!');
+                        }
+                }
+
+
+		/*
+		 * Create temp Record obj for validation
+		 */
+		$tempRecord = new Record(array(
+			'name' => $p->name,
+			'type' => $p->type,
+			'content' => $p->content,
+			'ttl' => $p->ttl,
+			'prio' => $p->prio
+			));
+		$result = $tempRecord->validate();
+		if($result['is_ok'] === false) {
+			throw new Exception($result['message']);
+                }
+		
+		$tempRecord = null;
+
+		/*
+		 * Create queue for new record
+		 */
+			
 		$q = new Queue(array(
 			'change_date' => date("Y-m-d\TH:i:s"),
 			'archived' => 0,
@@ -129,7 +173,6 @@ class JSONRPC {
 		$q->save();
 		return $q->id;
 	} 
-
 }
 
 ?>
