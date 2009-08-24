@@ -82,6 +82,44 @@ class Domain extends DomainBase {
 #			"ORDER BY d.name");
 #	} 
 
+	public function update_soa_record() {
+		$today = date('Ymd');
+		$r = Record::find('first',array('conditions' => "domain_id=" .Domain::quote($this->id). " AND type='SOA'"));
+		$soa = explode(" ", $r->content);
+		if (strncmp($today, $soa[2], 8) === 0) {
+			/*
+			 * Current serial starts with date of today, so we need to update
+			 * the revision only. To do so, determine current revision first,
+			 * then update counter.
+			 */
+			$revision = (int) substr($soa[2], -2);
+			++$revision;
+		} else {
+			/*
+			 * Current serial did not start of today, so it's either an older
+			 * serial or a serial that does not adhere the recommended syntax
+			 * of RFC-1912. In either way, set a fresh serial
+			 */
+                        $revision = "00";
+		}
+
+		/*
+		 * Add additional 0 if $revision is 1 .. 9 so we get a nice number like 01, etc..
+		 */
+		$newserial = $today . str_pad($revision, 2, "0", STR_PAD_LEFT);;
+		$soa[2] = $newserial;
+
+		/*
+		 * Reconstruct SOA record's content string
+		 */
+		foreach ($soa as $value) {
+			$content .= $value . " ";
+		}
+
+		$r->content = $content;
+		$r->save();
+	}
+
 	static function valid_types() { 
 		return array('NATIVE','MASTER','SLAVE');
 	} 
