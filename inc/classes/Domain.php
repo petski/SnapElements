@@ -89,7 +89,8 @@ class Domain extends DomainBase {
         public function is_valid($key = null, $value = null) {
                 switch ($key) {
                                 case "name":
-                                        return strlen($value) <= 255 ? true : false;
+                                        return (strlen($value) > 0 && strlen($value) <= 255) ? true : false;
+
                                 case "type":
                                         return in_array($value, Domain::valid_types());
                                 default:
