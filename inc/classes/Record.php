@@ -44,6 +44,10 @@ class Record extends RecordBase {
 				'message' => "Initial errors array"
 			);
 		switch ($name) { 
+				case "domain_id":
+					$errors['is_ok'] = true;
+					$errors['message'] = "Domain_id not validated!";
+					return $errors;
 				case "name":
 					$errors['is_ok'] = strlen($this->$name) < 255 ? true : false;
 					$errors['message'] = "Record name too long!";
@@ -81,13 +85,13 @@ class Record extends RecordBase {
 					}
 				case "ttl":
                                         # Do magic
-					$errors['is_ok'] = $this->ttl >= 0 ? true : false;
+					$errors['is_ok'] =  preg_match('/^\d+$/', $this->ttl) ? true : false;
 					$errors['message'] = "TTL must be a positive int";
 					return $errors;
 				case "prio":
 					switch ($this->type) {
 						case "MX":
-							$errors['is_ok'] = $this->prio >= 0 ? true : false;
+							$errors['is_ok'] =  preg_match('/^\d+$/', $this->prio) ? true : false;
 							$errors['message'] = "Prio must be a positive int";	
 							return $errors;
 					}

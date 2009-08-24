@@ -15,7 +15,6 @@ class Config {
                         'dns.hostmaster'        => 'postmaster',
                         'dns.ns1'               => 'ns1.example.com',
                         'dns.ns2'               => 'ns2.example.com',
-                        'dns.serial'            => '2009081901',
                         'dns.ttl'               => '86400',
                         'dns.refresh'           => '28800',
                         'dns.retry'             => '7200',

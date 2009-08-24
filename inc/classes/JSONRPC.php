@@ -107,6 +107,26 @@ class JSONRPC {
 			'ttl'		=> $p->ttl,
 			'prio'		=> $p->prio	
 			));
+
+		/*
+		 * TODO create nicer way to fix killing white spaces for SOA records
+		 */
+
+		switch($r->type) {
+			case "SOA":
+				$r->content = (str_replace('+',' ',$r->content));	
+			default: 
+		}
+
+
+		/*
+		 * Last validation check before saving the new record
+		 */
+		$result = $r->validate();
+                if($result['is_ok'] === false) {
+                        throw new Exception($result['message']);
+                }
+
 		$r->save();
 		return $r->id;
 	}

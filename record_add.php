@@ -97,10 +97,11 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 		var domain_name = $('form0')['domain_name'].value;
 		if(template == 'new_domain') { 
 			<?php 
+			$serial = ''.date('Ymd').'01';
 			$soa = join(" ", array( 
 						$config->get('dns.ns1'),
 						$config->get('dns.hostmaster'),
-						$config->get('dns.serial'),
+						$serial,
 						$config->get('dns.refresh'),
 						$config->get('dns.retry'),
 						$config->get('dns.expire'),
