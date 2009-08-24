@@ -77,7 +77,6 @@ class JSONRPC {
 	}
 
 	public function record_add($p) { 
-		$errors = array();
 		$domain_id = "";
 		if(isSet($p->domain_id)) {
 			$domain_id = $p->domain_id;
@@ -91,31 +90,25 @@ class JSONRPC {
 			if($d->id != NULL) {
 				$domain_id = $d->id;
 			} else {
-				array_push($errors, 'Domain not found!');
-				//throw new Exception("Domain not found!");
+				throw new Exception("Domain not found!");
 			}
 		} else {
 			/*
 			 * Throw some error
 			 */
-			array_push($errors, 'No domain_id or domain_name found!');
-			//throw new Exception("No domain_id or domain_name found!");
+			throw new Exception("No domain_id or domain_name found!");
 		}
 
-		if(count($errors) == 0) {
-			$r = new Record(array(
-				'domain_id' => $domain_id, 
-				'name' => $p->name, 
-				'type' => $p->type, 
-				'content' => $p->content,
-				'ttl' => $p->ttl,
-				'prio' => $p->prio	
-				));
-			$r->save();
-			return $r->id;
-		} else {
-			return $errors;
-		}
+		$r = new Record(array(
+			'domain_id'	=> $domain_id, 
+			'name'		=> $p->name, 
+			'type'		=> $p->type, 
+			'content'	=> $p->content,
+			'ttl'		=> $p->ttl,
+			'prio'		=> $p->prio	
+			));
+		$r->save();
+		return $r->id;
 	}
 
 	public function queue_record_add($p) { 

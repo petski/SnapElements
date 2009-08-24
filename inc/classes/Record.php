@@ -59,30 +59,48 @@ class Record extends RecordBase {
 							$errors['is_ok'] = $this->$name == long2ip(ip2long($this->$name)) ? true : false;
 							$errors['message'] = "Content contains not a valid IPV4 IP-Address!"; 
 							return $errors;
-						case "MX":
-							# Stolen from pear/Net_IPv4/IPv4.php
+						case "CNAME":
+							# Stolen from pear/Net_IPv4/IPv4.php, note check is inverted. 
 							$errors['is_ok'] = $this->$name == long2ip(ip2long($this->$name)) ? false : true;
-							$errors['message'] = "Content contains IP-Address, not allowed for MX records!"; 
+							$errors['message'] = "Content contains IP-Address, not allowed for $this->type records!"; 
+							return $errors;
+						case "MX":
+							# Stolen from pear/Net_IPv4/IPv4.php, note check is inverted. 
+							$errors['is_ok'] = $this->$name == long2ip(ip2long($this->$name)) ? false : true;
+							$errors['message'] = "Content contains IP-Address, not allowed for $this->type records!"; 
 							return $errors;
 						case "SOA":
 							# Do magic
 							$errors['is_ok'] = true;
-							$errors['message'] = "Content not check for SOA!"; 
+							$errors['message'] = "Content not checked for $this->type!"; 
 							return $errors;
 						default: 
 							$errors['is_ok'] = false;
 							$errors['message'] =  "Don't know how to validate the content for a $this->type yet!";
 							return $errors;
 					}
+				case "ttl":
+                                        # Do magic
+					$errors['is_ok'] = $this->ttl >= 0 ? true : false;
+					$errors['message'] = "TTL must be a positive int";
+					return $errors;
+				case "prio":
+					switch ($this->type) {
+						case "MX":
+							$errors['is_ok'] = $this->prio >= 0 ? true : false;
+							$errors['message'] = "Prio must be a positive int";	
+							return $errors;
+					}
+                                        # Remove this once all checks are in place
+                                        $errors['is_ok'] = true;
+                                        $errors['message'] = "TTL is not validated!";
+                                        return $errors;
+                                        # END Remove this once all checks are in place
+
 				default: 
 					
-					/*
-					 * TODO Activate this later on
-					 *$errors['is_ok'] = false;
-					 *$errors['message'] = "Don't know how to validate the ${name} attribute";
-					 *return $errors;
-					 */
-					$errors['is_ok'] = true;
+					$errors['is_ok'] = false;
+					$errors['message'] = "Don't know how to validate the ${name} attribute";
 					return $errors;
 		}
 		return $errors;
