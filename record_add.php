@@ -69,7 +69,7 @@ if(preg_match('/^\d+$/', $_GET[$default_key])) {
 		var newform = new Element('form', { 
 						'action': e.readAttribute('action'), 
 						'onsubmit': e.readAttribute('onsubmit'),
-						'id': id,
+						'id': id
 		                          }).update(e.innerHTML);
 
 
