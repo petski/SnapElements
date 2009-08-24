@@ -100,7 +100,7 @@ class Domain extends DomainBase {
 			 * serial or a serial that does not adhere the recommended syntax
 			 * of RFC-1912. In either way, set a fresh serial
 			 */
-                        $revision = "00";
+			$revision = "00";
 		}
 
 		/*
