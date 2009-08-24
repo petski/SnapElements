@@ -41,9 +41,7 @@ class Display {
                           method: 'post',
                           parameters: {"jsonrpc": "2.0", "method": "queue_count_all", "params": null, "id": 1},
                           onSuccess: function(r) {
-						for each (var e in $$('#queue_count_all'))  { 
-							e.update('(' + r.responseJSON.result + ')');
-						} 
+                            $$('#queue_count_all').each(function(e) { e.update('(' + r.responseJSON.result + ')') });
                           }
 		});
 	}
