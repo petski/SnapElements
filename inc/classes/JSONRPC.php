@@ -123,9 +123,9 @@ class JSONRPC {
 		 * Last validation check before saving the new record
 		 */
 		$result = $r->validate();
-                if($result['is_ok'] === false) {
-                        throw new Exception($result['message']);
-                }
+		if($result['is_ok'] === false) {
+			throw new Exception($result['message']);
+		}
 
 		$r->save();
 		return $r->id;
@@ -140,6 +140,22 @@ class JSONRPC {
 					))) 
 		{ 
 			throw new Exception("Record already exists!");
+		}
+		
+		/*
+		 * Consistany check for SOA records, only allowed once at a domain
+		 */
+		if($p->type === SOA) {
+
+			if(Record::find('first', array('conditions' =>
+						'domain_id = '.Record::quote($p->domain_id) .
+						' AND type = '. Record::quote($p->type)
+						)))
+			{
+				throw new Exception("Soa record only allowed once at a domain!");
+			}
+
+			
 		}
 
 		# Shouldn't be a pending (record_add) change for this domain.

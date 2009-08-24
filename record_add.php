@@ -1,9 +1,17 @@
 <?php
 require_once('base.php');
 require_once($class_root . 'Record.php');
+require_once($class_root . 'Domain.php');
 print $display->header();
 
 $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
+$d = null;
+
+if(preg_match('/^\d+$/', $_GET[$default_key])) {
+	$d = Domain::find('first', array('conditions' => 'id = '. $_GET[$default_key]));
+} else {
+	$d = $_GET[$default_key];
+}
 
 ?>
 
@@ -132,6 +140,11 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 
 <div id="feedback" style="display: none;"></div>
 
+<br>
+
+<div class="header"><?php print "Add record(s) for domain: "; print is_object($d) ? $d->name : $d; ?></div><br>
+<br>
+
 <form action="javascript:void(0);" onsubmit="return false;" id="form0">
 <input type="hidden" name="<?php echo $default_key; ?>" value="<?php echo $_GET[$default_key]; ?>">
 <table>
@@ -144,7 +157,7 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
  <th>Action</th>
 </tr>
 <tr class="record">
-	 <td><input type="text" name="name" value=""></td>
+	 <td><input type="text" name="name" value="<?php print is_object($d) ? $d->name : $d;?>"></td>
 	 <td>
 				<select name="type">
 				<?php foreach(Record::valid_types() as $type) {
@@ -153,7 +166,7 @@ $default_key = $_GET['domain_id'] ? 'domain_id' : 'domain_name';
 				</select>
 	 </td>
 	 <td><input type="text" name="content" value="" size="40"></td>
-	 <td><input type="text" name="ttl" value="86400"></td>
+	 <td><input type="text" name="ttl" value="<?php echo $config->get('dns.ttl')?>"></td>
 	 <td><input type="text" name="prio" size="3"></td>
 	 <td>
 		<button onclick="queue_record_add(this.ancestors()[4]);">Add to queue</button>

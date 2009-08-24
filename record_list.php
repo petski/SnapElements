@@ -11,9 +11,15 @@ if(! preg_match('/^\d+$/',$_GET['id'])) {
 	exit(1);
 }
 
-$d = Domain::find($_GET['id']);
-$findResult = Record::find('all', array('conditions' => 'domain_id = '.Record::quote($d->id), 'order' => 'name'));
+try {
+	$d = Domain::find($_GET['id']);
+	$findResult = Record::find('all', array('conditions' => 'domain_id = '.Record::quote($d->id), 'order' => 'name'));
+} catch (Exception $e) {
+	print $e->getMessage();
+	print $display->footer();
+	exit(0);
 
+}
 print '<div class="header">'.count($findResult).' records found in domain "'.$d->name.'"</div><br>';
 
 print $display->link('record_add.php?domain_id='.$d->id,'Add record');
