@@ -25,9 +25,9 @@ class JSONRPC {
 		$d = new Domain(array('name' => $p->name, 'type' => $p->type));
 		$d->save();
 		return $d->id;
-	} 
+	}
 
-	public function queue_domain_add($p) { 
+	public function queue_domain_add($p) {
 
 		if(! Domain::is_valid('name', $p->name)) { 
 			throw new Exception("Name is not valid");
@@ -60,7 +60,7 @@ class JSONRPC {
 			));
 		$q->save();
 		return $q->id;
-	} 
+	}
 
 	public function queue_domain_delete($p) { 
 		# Validate record (foreach ... bla bla)
@@ -111,13 +111,11 @@ class JSONRPC {
 		/*
 		 * TODO create nicer way to fix killing white spaces for SOA records
 		 */
-
 		switch($r->type) {
 			case "SOA":
 				$r->content = (str_replace('+',' ',$r->content));	
 			default: 
 		}
-
 
 		/*
 		 * Last validation check before saving the new record
@@ -132,32 +130,6 @@ class JSONRPC {
 	}
 
 	public function queue_record_add($p) { 
-		# Shouldn't be a existing record
-		if(Record::find('first', array('conditions' => 
-					'name = '.Record::quote($p->name) . 
-					' AND type = '. Record::quote($p->type) . 
-					' AND content = '. Record::quote($p->content)
-					))) 
-		{ 
-			throw new Exception("Record already exists!");
-		}
-		
-		/*
-		 * Consistany check for SOA records, only allowed once at a domain
-		 */
-		if($p->type === SOA) {
-
-			if(Record::find('first', array('conditions' =>
-						'domain_id = '.Record::quote($p->domain_id) .
-						' AND type = '. Record::quote($p->type)
-						)))
-			{
-				throw new Exception("Soa record only allowed once at a domain!");
-			}
-
-			
-		}
-
 		# Shouldn't be a pending (record_add) change for this domain.
 		$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0 AND function="record_add"'));
 		foreach($qFindResult as $entry) {
@@ -169,11 +141,11 @@ class JSONRPC {
                         }
                 }
 
-
 		/*
 		 * Create temp Record obj for validation
 		 */
 		$tempRecord = new Record(array(
+			'domain_id' => $p->domain_id,
 			'name' => $p->name,
 			'type' => $p->type,
 			'content' => $p->content,
@@ -184,7 +156,7 @@ class JSONRPC {
 		if($result['is_ok'] === false) {
 			throw new Exception($result['message']);
                 }
-		
+
 		$tempRecord = null;
 
 		/*

@@ -24,19 +24,64 @@ class Record extends RecordBase {
 	protected $belongs_to = array('domain');
 	
 	public function validate() { 
-		$result = array();
+		$result = array('is_ok' => false, 'messages' => "");
+
+		if(!preg_match('/^\d+$/', $this->domain_id)) {
+			$result['is_ok'] = false;
+			$result['message'] = "Record doesn't belong to a domain or domain_id not set!";
+			return $result;
+		}
+
 		foreach($this->attributes as $key => $value) { 
 			$result = $this->validate_attribute($key);
 			if($result['is_ok'] === false) { 
 				return $result;
 			} 
 		} 
+
+		$result = $this->is_unique();
+
 		return $result;
 	}
 
 	static function valid_types() { 
 		return array('A','AAAA','CNAME','HINFO','MX','NS','PTR','SOA','SRV','TXT','MBOXFW','NAPTR','URL');
 	} 
+
+	/*
+	 * Check if record is unique at current domain
+	 */
+	public function is_unique() {
+		$result = array('is_ok' => true, 'message' => 'Record is unique!');
+		if(Record::find('first', array('conditions' =>
+					'name = '.Record::quote($this->name) .
+					' AND type = '. Record::quote($this->type) .
+					' AND content = '. Record::quote($this->content)
+					)))
+		{
+			$result['is_ok'] = false;
+			$result['message'] = "Record already exists!";
+			return $result;
+		}
+
+		/*
+		 * Consistany check for SOA records, only allowed once at a domain
+		 */
+		if($this->type === SOA) {
+			$result['is_ok'] = false;
+			$result['message'] = "found SOA type!";
+			if(Record::find('first', array('conditions' =>
+						'domain_id = '.Record::quote($this->domain_id) .
+						' AND type = '. Record::quote($this->type)
+						)))
+			{
+				$result['is_ok'] = false;
+				$result['message'] = "Soa record only allowed once at a domain!";
+				return $result;
+			}
+		}
+		return $result;
+	}
 
 	public function validate_attribute($name = null) {
 		$errors = array(
