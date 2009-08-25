@@ -82,11 +82,27 @@ CREATE TABLE `queue` (
   `archived` tinyint(1) NOT NULL DEFAULT '0',
   `user_id` int(11) DEFAULT NULL,
   `user_name` varchar(16) COLLATE latin1_general_ci NOT NULL DEFAULT '',
+  `comment` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `queue_item`
+--
+
+DROP TABLE IF EXISTS `queue_item`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `queue_item` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `queue_id` int(11) DEFAULT NULL,
   `function` varchar(50) COLLATE latin1_general_ci NOT NULL,
   `change` text COLLATE latin1_general_ci,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 SET character_set_client = @saved_cs_client;
+
 
 --
 -- End our Custom MySQL table structure
