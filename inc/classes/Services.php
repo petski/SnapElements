@@ -4,7 +4,7 @@ require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Queue.php';
 require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Domain.php';
 require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Record.php';
 
-class JSONRPC {
+class Services {
 
 	public function queue_count_all() { 
 		return count(Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0')));

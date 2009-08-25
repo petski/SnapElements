@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli')
 set_include_path(get_include_path() . PATH_SEPARATOR . '..');
 
 
-require_once('JSONRPC.php');
+require_once('Service.php');
 
 #$str_json = '{"domain_name":"bla.com","name":"bla.com","type":"A","content":"1.1.1.1","ttl":"86400","prio":""}';
 $str_json = '{"domain_id":"3","name":"bla.com","type":"AA","content":"1.1.1.1","ttl":"86400","prio":""}';
