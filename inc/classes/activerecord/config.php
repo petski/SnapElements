@@ -15,6 +15,7 @@ $AR_TABLES = array(
   'records',
   'domains',
   'queue',
+  'queue_item',
   'zones',
   'users',
 );
