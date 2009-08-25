@@ -94,14 +94,20 @@ class Record extends RecordBase {
 					$errors['message'] = "Domain_id not validated!";
 					return $errors;
 				case "name":
-					$errors['is_ok'] = strlen($this->$name) < 255 ? true : false;
-					$errors['message'] = "Record name too long!";
+					$errors['is_ok'] = (strlen($this->name) > 0 && strlen($this->name) <= 255) ? true : false;
+					$errors['message'] = "Record name too small or too long!";
 					return $errors;
 				case "type": 
 					$errors['is_ok'] = in_array($this->$name,Record::valid_types()) ? true : false;
 					$errors['message'] = "Invalid record type!";
 					return $errors;
 				case "content":
+					$sizeError = (strlen($this->content) > 0 && strlen($this->content) <= 255) ? false : true;
+					if($sizeError) {
+						$errors['is_ok'] = false;
+						$errors['message'] = "Content too small or too long!";
+						return $errors;
+					}
 					switch ($this->type) { 
 						case "A":
 							# Stolen from pear/Net_IPv4/IPv4.php
@@ -142,7 +148,7 @@ class Record extends RecordBase {
 					}
                                         # Remove this once all checks are in place
                                         $errors['is_ok'] = true;
-                                        $errors['message'] = "TTL is not validated!";
+                                        $errors['message'] = "Prio is not validated!";
                                         return $errors;
                                         # END Remove this once all checks are in place
 
