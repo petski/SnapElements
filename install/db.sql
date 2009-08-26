@@ -80,7 +80,7 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `queue` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `change_date` datetime NOT NULL,
+  `ch_date` datetime NOT NULL,
   `commit_date` datetime DEFAULT NULL,
   `domain_name` varchar(255) NOT NULL,
   `archived` tinyint(1) NOT NULL DEFAULT '0',
