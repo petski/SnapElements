@@ -26,11 +26,22 @@ class Record extends RecordBase {
 	public function validate() { 
 		$result = array('is_ok' => false, 'messages' => "");
 
-		if(!preg_match('/^\d+$/', $this->domain_id)) {
+		/*
+		 * Check if domain_id is set to init state
+		 * This is only allowed if we have a pending (domain_add) change for 
+		 * same domain as this record is for.
+		 */
+		//TODO FIX CHECK!!
+		/*
+		if(!preg_match('/^init/', $this->domain_id)) {
+			// Keep on going
+		//TODO change preg_match('/^\d+$/ to $this->domain = $this->domain_id not just check if it's a digit.. 
+		} elseif(!preg_match('/^\d+$/', $this->domain_id)) {
 			$result['is_ok'] = false;
 			$result['message'] = "Record doesn't belong to a domain or domain_id not set!";
 			return $result;
 		}
+		*/
 
 		foreach($this->attributes as $key => $value) { 
 			$result = $this->validate_attribute($key);
@@ -68,8 +79,6 @@ class Record extends RecordBase {
 		 * Consistany check for SOA records, only allowed once at a domain
 		 */
 		if($this->type === SOA) {
-			$result['is_ok'] = false;
-			$result['message'] = "found SOA type!";
 			if(Record::find('first', array('conditions' =>
 						'domain_id = '.Record::quote($this->domain_id) .
 						' AND type = '. Record::quote($this->type)

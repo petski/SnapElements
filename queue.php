@@ -60,43 +60,26 @@ function commit_successfull(id) {
 <div id="feedback" style="display: none;"></div>
 <br>
 <?php
-$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0'));
+
+try {
+	$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0'));
+} catch (Exception $e) {
+	print $e->getMessage();
+	print $display->footer();
+	exit(0);
+}
+
+
+
 print '<div class="header">Queue entries <span id="queue_count_all">('.count($qFindResult).')</span></div><br>';
 
-if(count($qFindResult) > 0) { 
-	print <<< __EOS__
-	<table>
-	<tr>
-	 <th>Date</th>
-	 <th>Username</th>
-	 <th>Function</th>
-	 <th>Change</th>
-	 <th>Action</th>
-	</tr>
-__EOS__;
+print $display->queue_header();
+foreach($qFindResult as $queue) {
+        print $display->queue($queue);
+}
+print $display->queue_footer();
+ 
 
-	foreach($qFindResult as $entry) { 
-
-		preg_match('/^(domain|record).*$/', $entry->function, $m);
-		$changed_item = $m[1];
-
-		$change_encoded = urlencode($entry->change);
-
-		print <<< __EOS__
-		<tr class="{$changed_item}" id="tr_entry{$entry->id}">
-			<td>$entry->change_date</td>
-			<td>$entry->user_name</td>
-			<td>$entry->function</td>
-			<td>$entry->change</td>
-			<td id="action_entry{$entry->id}">
-				<button onclick="commit($entry->id, '{$entry->function}','{$change_encoded}'); return false;">Commit</button>
-				<button onclick="queue_delete($entry->id); return false;">Delete</button>
-			</td>
-		</tr>
-__EOS__;
-	}
-	print '</table>';
-} 
 
 print $display->footer();
 ?>

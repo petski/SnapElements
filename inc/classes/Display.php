@@ -158,6 +158,38 @@ __EOS__;
 __EOS__;
 	} 
 
+	public function queue_header() {
+                return <<< __EOS__
+                        <table>
+                        <tr>
+                         <th>Date</th>
+                         <th>Domain</th>
+                         <th>Comment</th>
+                         <th>Action</th>
+                        </tr>
+__EOS__;
+	}
+
+        public function queue_footer() {
+                return $this->table_footer();
+        }
+
+	public function queue($queue = array()) {
+                $queue = (object)$queue;
+
+		return <<< __EOS__
+		       <tr class="queue" id="tr_entry{$queue->id}">
+			       <td>$queue->ch_date</td>
+			       <td>$queue->domain_name</td>
+			       <td>$queue->comment</td>
+			       <td id="action_entry{$queue->id}">
+				       {$this->link('domain_edit.php?id='.$queue->id,$this->button('edit'))}
+				       {$this->link('#',$this->button('delete'), "domain_delete($queue->id, '$queue->domain_name')")}
+				       {$this->link('queueItem_list.php?id='.$queue->id,$this->button('view'))}
+			       </td>
+		       </tr>
+__EOS__;
+        }
 }
 
 ?>

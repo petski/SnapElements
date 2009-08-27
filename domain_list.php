@@ -21,22 +21,25 @@ print $display->header();
 </script>
 
 <?php
+
 #
 #
 #
 
-$qFindResult = Queue::find('all', 
-			array('conditions' => 'function LIKE "domain_%" AND commit_date IS NULL and archived = 0'));
+$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL'));
 
-print '<div class="header">'.count($qFindResult).' pending changes</div><br>';
+print '<div class="header">'.Queue::count_all_pendingDomains().' pending domain changes</div><br>';
 
 if(count($qFindResult) > 0) { 
+
 	print '<table><tr><th>Function</th><th>Name</th><th>Type</th><th>By</th></tr>';
 	foreach($qFindResult as $entry) {
-		$c = json_decode($entry->change);
-		print '<tr class="domain"><td>'.$entry->function.'</td><td>'.$c->name.'</td><td>'.$c->type.'</td><td>'.$entry->user_name.'</td></tr>';
+		foreach($entry->queue_item_domains as $item) {
+			print '<tr class="domain"><td>'.$item->function.'</td><td>'.$item->name.'</td><td>'.$item->type.'</td><td>'.$item->user_id.'</td></tr>';
+		}
 	}
 	print '</table><br><br>';
+
 }
 
 #
