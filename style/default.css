@@ -38,6 +38,15 @@ tr.record td {
 	background-color: #FFFF66; 
 }
 
+tr.queue td {
+	background-color: #AAFF96; 
+}
+
+tr.queue_closed td {
+	background-color: #AAAA96; 
+
+}
+
 tr.queue_commited td {
 	background-color: #D3D3D3;
 }

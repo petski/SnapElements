@@ -24,12 +24,28 @@ require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'QueueItemRecord.php';
 class Queue extends QueueBase {
 	protected $has_many = array('queue_item_domains','queue_item_records');
 
+	/*
+	 * Cleanup all queue_item_domains and queue_item_records that depend on this Queue Obj
+	 */
+	protected function before_destroy() {
+		foreach(array_merge($this->queue_item_domains,$this->queue_item_records) as $o) { 
+			$o->destroy(); 
+		}
+	}
+
+	public function count_pendingItems() {
+		$amount = 0;
+		$amount += count($this->queue_item_domains);
+		$amount += count($this->queue_item_records);
+		return $amount;
+	}
+
 	static function count_all_pendingDomains() {
 		$amount = 0;
 		$qFindResult = Queue::find('all', array('conditions' => 'commit_date IS NULL'));
 		foreach($qFindResult as $q) {
-			foreach($q->queue_item_domains as $qid) {
-				$amount += count($qid); 
+			foreach($q->queue_item_domains as $qdomain) {
+				$amount += count($qdomain); 
 			}
 		}
 		return $amount;

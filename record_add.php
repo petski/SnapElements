@@ -43,22 +43,19 @@ if(preg_match('/^\d+$/', $_GET[$default_key])) {
 				  parameters: {"jsonrpc": "2.0", "method": 'queue_record_add', "params": params , "id": 1},
 				  onSuccess: function(r) {
 					var json = r.responseText.evalJSON();
-                                        if(json.error) {
-                                                $('feedback').update(json.error.message + ' (' + json.error.code + ')').
-                                                        setStyle({color: 'red', display: 'block'});
-                                        }
-                                        else {
-                                                $('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
-                                                //window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
+					if(json.error) {
+						$('feedback').update(json.error.message + ' (' + json.error.code + ')').
+						setStyle({color: 'red', display: 'block'});
+					} else {
+						$('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
+						//window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
 						queue_counter();
 						form[form.disabled ? 'enable' : 'disable']();
 						form.disabled = !form.disabled;
 						form.getElementsByTagName('button')[0].writeAttribute( { 'disabled': true } );
 						form.getElementsByTagName('button')[1].writeAttribute( { 'disabled': true } );
 					}
-				  }
-				});
-
+				  }});
 	} 
 
 	var rowcounter = 0;
@@ -105,7 +102,7 @@ if(preg_match('/^\d+$/', $_GET[$default_key])) {
 		var domain_name = $('form0')['domain_name'].value;
 		if(template == 'new_domain') { 
 			<?php 
-			$serial = ''.date('Ymd').'01';
+			$serial = ''.date('Ymd').'00';
 			$soa = join(" ", array( 
 						$config->get('dns.ns1'),
 						$config->get('dns.hostmaster'),

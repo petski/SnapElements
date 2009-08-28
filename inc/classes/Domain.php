@@ -31,40 +31,48 @@ class Domain extends DomainBase {
 
 	// See TODO
 
-        protected $former_attributes = array();
+	protected $former_attributes = array();
 
-        protected function after_create() {
-                $output = array();
-                foreach(array_keys($this->attributes) as $key) {
-                        $output[$key]['n'] = $this->attributes[$key];
-                }
-                $this->after_care($output);
-        }
+	protected function after_create() {
+		$output = array();
+		foreach(array_keys($this->attributes) as $key) {
+				$output[$key]['n'] = $this->attributes[$key];
+		}
+		$this->after_care($output);
+	}
 
-        protected function before_update() {
-                $this->former_attributes = $this->find($this->id)->attributes;
-        }
+	protected function before_update() {
+		$this->former_attributes = $this->find($this->id)->attributes;
+	}
 
-        protected function after_update() {
-                $changes = array_diff_assoc($this->former_attributes,$this->attributes);
-                foreach($changes as $key => $value) {
-                        $output[$key] = array('o' => $value,
-                                              'n' => $this->attributes[$key]);
-                }
-                $this->after_care($output);
-        }
+	protected function after_update() {
+		$changes = array_diff_assoc($this->former_attributes,$this->attributes);
+		foreach($changes as $key => $value) {
+			$output[$key] = array('o' => $value,'n' => $this->attributes[$key]);
+		}
+		$this->after_care($output);
+	}
 
-        protected function after_destroy() {
-                $output = array();
-                foreach(array_keys($this->attributes) as $key) {
-                        $output[$key]['o'] = $this->attributes[$key];
-                }
-                $this->after_care($output);
-        }
+	/*
+	 * Cleanup all records that depend on this Domain Obj
+	 */
+	protected function before_destroy() {
+		foreach($this->records as $r) {
+			$r->destroy();
+		}
+	}
 
-        private function after_care($changes) {
-                # Update serial if needed (see configfile)
-        }
+	protected function after_destroy() {
+		$output = array();
+		foreach(array_keys($this->attributes) as $key) {
+			$output[$key]['o'] = $this->attributes[$key];
+		}
+		$this->after_care($output);
+	}
+
+	private function after_care($changes) {
+		# Update serial if needed (see configfile)
+	}
 
 	static function get_all($args = array()) { 
 		return Domain::query("SELECT d.id, d.name, d.type, COUNT(DISTINCT r.id) AS record_count ".
@@ -124,18 +132,18 @@ class Domain extends DomainBase {
 		return array('NATIVE','MASTER','SLAVE');
 	} 
 
-        public function is_valid($key = null, $value = null) {
-                switch ($key) {
-                                case "name":
-                                        return (strlen($value) > 0 && strlen($value) <= 255) ? true : false;
+	public function is_valid($key = null, $value = null) {
+		switch ($key) {
+			case "name":
+				return (strlen($value) > 0 && strlen($value) <= 255) ? true : false;
 
-                                case "type":
-                                        return in_array($value, Domain::valid_types());
-                                default:
-                                        return false;
-                }
-        }
-	
+			case "type":
+				return in_array($value, Domain::valid_types());
+
+			default:
+				return false;
+		}
+	}
 }
 
 ?>

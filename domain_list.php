@@ -46,15 +46,18 @@ if(count($qFindResult) > 0) {
 #
 #
 
-$dFindResult = Domain::get_all();
+$dFindResult = Domain::find('all');
 
 print '<div class="header">'.count($dFindResult).' domains found</div><br>';
 
-print $display->domains_header();
-foreach($dFindResult as $domain) {
-        print $display->domain($domain);
+
+if(count($dFindResult) > 0) {
+		print $display->domains_header();
+		foreach($dFindResult as $domain) {
+				print $display->domain($domain);
+		}
+		print $display->domains_footer();
 }
-print $display->domains_footer();
 
 print $display->footer();
 ?>
