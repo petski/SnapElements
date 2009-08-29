@@ -3,7 +3,7 @@ require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. '..' .DIRECTORY_SEPARATOR. 
 
 class QueueItemRecordBase extends ActiveRecord {
 
-  protected $columns = array('id', 'ch_date', 'queue_id', 'user_id', 'function', 'domain_name', 'name', 'type', 'content', 'ttl', 'prio', 'change_date');
+  protected $columns = array('id', 'ch_date', 'commit_date', 'queue_id', 'user_id', 'function', 'domain_name', 'name', 'type', 'content', 'ttl', 'prio', 'change_date');
   protected $table_name = 'queue_item_records';
   protected $table_vanity_name = 'queue_item_records';
   protected $primary_key = 'id';

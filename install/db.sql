@@ -101,6 +101,7 @@ SET character_set_client = utf8;
 CREATE TABLE `queue_item_domains` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ch_date` datetime NOT NULL,
+  `commit_date` datetime DEFAULT NULL,
   `queue_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `function` varchar(50) COLLATE latin1_general_ci NOT NULL,
@@ -124,6 +125,7 @@ SET character_set_client = utf8;
 CREATE TABLE `queue_item_records` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ch_date` datetime NOT NULL,
+  `commit_date` datetime DEFAULT NULL,
   `queue_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `function` varchar(50) COLLATE latin1_general_ci NOT NULL,
@@ -141,4 +143,3 @@ SET character_set_client = @saved_cs_client;
 --
 -- End SnapElements MySQL table structure
 --
-
