@@ -21,22 +21,20 @@ print $display->header();
 		//window.params = params;
 
                 new Ajax.Request('api/jsonrpc.php', {
-                                  method: 'post',
-                                  parameters: {"jsonrpc": "2.0", "method": 'queue_domain_add', "params": params , "id": 1},
-                                  onSuccess: function(r) {
-					var json = r.responseText.evalJSON();
-					if(json.error) { 
-						$('feedback').update(json.error.message + ' (' + json.error.code + ')').
-							setStyle({color: 'red', display: 'block'});
-					}
-					else {
-						$('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
-						window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
-					}
-                                  }
-                });
+							method: 'post',
+							parameters: {"jsonrpc": "2.0", "method": 'queue_domain_add', "params": params , "id": 1},
+							onSuccess: function(r) {
+								var json = r.responseText.evalJSON();
+								if(json.error) { 
+									$('feedback').update(json.error.message + ' (' + json.error.code + ')').
+									setStyle({color: 'red', display: 'block'});
+								} else {
+									$('feedback').update('Request added to queue').setStyle({color: 'black', display: 'block'});
+									window.location = 'record_add.php?domain_name=' + myhash.get('name') + '&template=new_domain';
+								}
+							}});
 
-        } 
+	} 
 </script>
 
 <div id="feedback" style="display: none;"></div>

@@ -8,7 +8,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '..');
 
 require_once('Services.php');
 
-$str_json = '{"name":"example.com","type":"NATIVE"}';
+$str_json = '{"name":"wanker.com","type":"NATIVE"}';
 $Obj_json = json_decode($str_json);
 
 print "Output from Services: \n";

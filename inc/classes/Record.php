@@ -31,17 +31,16 @@ class Record extends RecordBase {
 		 * This is only allowed if we have a pending (domain_add) change for 
 		 * same domain as this record is for.
 		 */
-		//TODO FIX CHECK!!
-		/*
-		if(!preg_match('/^init/', $this->domain_id)) {
+		if($this->domain_id === init) {
 			// Keep on going
-		//TODO change preg_match('/^\d+$/ to $this->domain = $this->domain_id not just check if it's a digit.. 
+		/*
+		 * validate_attribute should take care of validating $this->domain_id if domain exists
+		 */
 		} elseif(!preg_match('/^\d+$/', $this->domain_id)) {
 			$result['is_ok'] = false;
 			$result['message'] = "Record doesn't belong to a domain or domain_id not set!";
 			return $result;
 		}
-		*/
 
 		foreach($this->attributes as $key => $value) { 
 			$result = $this->validate_attribute($key);

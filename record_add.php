@@ -9,6 +9,7 @@ $d = null;
 
 if(preg_match('/^\d+$/', $_GET[$default_key])) {
 	$d = Domain::find('first', array('conditions' => 'id = '. $_GET[$default_key]));
+//	$d = Domain::find($_GET[$default_key]);
 } else {
 	$d = $_GET[$default_key];
 }

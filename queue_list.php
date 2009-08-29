@@ -43,6 +43,24 @@ function queueItem_delete(id, method) {
 			}});
 }
 
+
+function queueItem_commit(id, method) {
+	new Ajax.Request('api/jsonrpc.php', {
+			method: 'post',
+			parameters: {"jsonrpc": "2.0", "method": method, "params": id , "id": 1},
+			onSuccess: function(r) {
+				var json = r.responseText.evalJSON();
+                if(json.error) {
+					$('feedback').update(json.error.message + ' (' + json.error.code + ')').
+					setStyle({color: 'red', display: 'block'});
+				} else {
+					$('tr_entry' + id).toggleClassName('queue_commited');
+					$('action_entry' + id).update('Commited item');
+					$('feedback').update('Request comitted').setStyle({color: 'black', display: 'block'});
+				}
+			}});
+}
+
 </script>
 
 

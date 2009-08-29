@@ -88,7 +88,7 @@ __EOS__;
 				break;
 			case "closed":
 				$image	= "lock";
-				($alt) ? null : $alt = "Closed";
+				($alt) ? null : $alt = "Open";
 				break;
 			case "commit":
 				$image	= "disk";
@@ -115,8 +115,11 @@ __EOS__;
 				$alt	= "Unknown image";
 				break;
 		}
-
-		return sprintf('<img src="images/icons/%s.png" title="%s" alt="%s" width="16" height="16">', $image, $alt, $alt);
+		if($type != none) {
+			return sprintf('<img src="images/icons/%s.png" title="%s" alt="%s" width="16" height="16">', $image, $alt, $alt);
+		} else {
+			return null;
+		}
 	} 
 
 	public function link($href = '', $content = '', $onclick = '') { 
@@ -220,6 +223,7 @@ __EOS__;
 		$queue = (object)$queue;
 		$rd_class = ($queue->closed == 0) ? "queue" : "queue_closed";
 		$lock_icon = ($queue->closed == 0) ? "close" : "closed";
+		$lock_function = ($queue->closed == 0) ? "close" : "open";
 
 		return <<< __EOS__
 			   <tr class="{$rd_class}" id="tr_entry{$queue->id}">
@@ -227,7 +231,7 @@ __EOS__;
 						<td>$queue->domain_name</td>
 						<td>$queue->comment</td>
 						<td id="action_entry{$queue->id}">
-								{$this->link('#',$this->button($lock_icon), "queue_close($queue->id)")}
+								{$this->link('#',$this->button($lock_icon), "queue_$lock_function($queue->id)")}
 								{$this->link('#',$this->button('commit'), "queue_commit($queue->id)")}
 								{$this->link('#',$this->button('delete'), "queue_delete($queue->id)")}
 								{$this->link('queue_list.php?id='.$queue->id,$this->button('view'))}
@@ -256,16 +260,29 @@ __EOS__;
 
 	public function queue_domain($queue_domain = array()) { 
 		$queue_domain = (object)$queue_domain;
+		$rd_class = "";
+		$del_icon = "";
+		$commit_icon = "";
+		if($queue_domain->commit_date == null) {
+			$rd_class = "domain";
+			$del_icon = "delete";
+			$commit_icon = "commit";
+		} else {
+			$rd_class = "queue_commited";
+			$del_icon = "none";
+			$commit_icon = "none";
+		}
 
 		return <<< __EOS__
-		       <tr class="domain" id="tr_entry{$queue_domain->id}">
+		       <tr class="{$rd_class}" id="tr_entry{$queue_domain->id}">
 			       <td>$queue_domain->ch_date</td>
 			       <td>$queue_domain->function</td>
 			       <td>$queue_domain->name</td>
 			       <td>$queue_domain->type</td>
 			       <td>$queue_domain->user_id</td>
 			       <td id="action_entry{$domain->id}">
-				       {$this->link('#',$this->button('delete'), "queueItem_delete($queue_domain->id,'queueItem_domain_delete'); return false;")}
+						{$this->link('#',$this->button($commit_icon), "queueItem_commit($queue_domain->id,'queueItem_domain_commit'); return false;")}
+						{$this->link('#',$this->button($del_icon), "queueItem_delete($queue_domain->id,'queueItem_domain_delete'); return false;")}
 			       </td>
 		       </tr>
 __EOS__;
@@ -294,9 +311,21 @@ __EOS__;
 
 	public function queue_record($queue_record = array()) { 
 		$queue_record = (object)$queue_record;
+		$rd_class = "";
+		$del_icon = "";
+		$commit_icon = "";
+		if($queue_record->commit_date == null) {
+			$rd_class = "record";
+			$del_icon = "delete";
+			$commit_icon = "commit";
+		} else {
+			$rd_class = "queue_commited";
+			$del_icon = "none";
+			$commit_icon = "none";
+		}
 
 		return <<< __EOS__
-		       <tr class="record" id="tr_entry{$queue_record->id}">
+		       <tr class="{$rd_class}" id="tr_entry{$queue_record->id}">
 			       <td>$queue_record->ch_date</td>
 			       <td>$queue_record->function</td>
 			       <td>$queue_record->name</td>
@@ -306,7 +335,8 @@ __EOS__;
 			       <td>$queue_record->prio</td>
 			       <td>$queue_record->user_id</td>
 			       <td id="action_entry{$queue_record->id}">
-				       {$this->link('#',$this->button('delete'), "queueItem_delete($queue_record->id,'queueItem_record_delete'); return false;")}
+				       {$this->link('#',$this->button($commit_icon), "queueItem_commit($queue_record->id,'queueItem_record_commit'); return false;")}
+				       {$this->link('#',$this->button($del_icon), "queueItem_delete($queue_record->id,'queueItem_record_delete'); return false;")}
 			       </td>
 		       </tr>
 __EOS__;

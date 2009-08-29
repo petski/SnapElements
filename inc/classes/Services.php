@@ -8,26 +8,31 @@ require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Record.php';
 
 class Services {
 
-	public function queue_count_all() { 
+	public function queue_count_all() {
 		return count(Queue::find('all', array('conditions' => 'commit_date IS NULL AND archived = 0')));
 	} 
 
-	public function queue_entry_commit($p) {
+	public function queue_commit($p) {
 		$q = Queue::find($p);
 		if($q != null) {
-		//TODO keep track of added domain / records incase of error for rollback
 			foreach(array_merge($q->queue_item_domains,$q->queue_item_records) as $item) {
 				$method = $item->function;
 				if(method_exists($this, $method)) {
-					$this->$method($item);
+					if($item->commit_date === null) {
+						$this->$method($item);
+						$item->commit_date = date("Y-m-d\TH:i:s");
+						$item->save();
+					}
 				} else {
-					throw new Exception("ERROR: Unknown method $item->function!!");
+					throw new Exception("Unknown method $item->function for $item->name type $item->type with id $item->id!!");
 				}
 			}
+
 			$q->closed = 1;
 			$q->user_id = 1;
 			$q->commit_date = date("Y-m-d\TH:i:s");
 			$q->save();
+
 			/*
 			 * Queue is finished update SOA record for domain
 			 */
@@ -39,7 +44,45 @@ class Services {
 		}
 	}
 
-	public function queue_entry_close($p) {
+	public function queueItem_domain_commit($p) {
+		$qDomain = QueueItemDomain::find($p);
+		if($qDomain != null) {
+			$method = $qDomain->function;
+			if(method_exists($this, $method)) {
+				if($qDomain->commit_date === null) {
+					$this->$method($qDomain);
+					$qDomain->commit_date = date("Y-m-d\TH:i:s");
+					$qDomain->save();
+				} else {
+					throw new Exception("Unknown method $qDomain->function for $qDomain->name type $qDomain->type with id $qDomain->id!!");
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function queueItem_record_commit($p) {
+		$qRecord = QueueItemRecord::find($p);
+		if($qRecord != null) {
+			$method = $qRecord->function;
+			if(method_exists($this, $method)) {
+				if($qRecord->commit_date === null) {
+					$this->$method($qRecord);
+					$qRecord->commit_date = date("Y-m-d\TH:i:s");
+					$qRecord->save();
+				} else {
+					throw new Exception("Unknown method $qRecord->function for $qRecord->name type $qRecord->type with id $qRecord->id!!");
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function queue_close($p) {
 		$q = Queue::find($p);
 		if($q != null) {
 			$q->closed = 1;
@@ -51,7 +94,18 @@ class Services {
 		}
 	}
 
-	public function queue_entry_delete($p) { 
+	public function queue_open($p) {
+		$q = Queue::find($p);
+		if($q != null) {
+			$q->closed = 0;
+			$q->user_id = 1;
+			$q->save();
+			return true;
+		} else {
+			return false;
+		}
+	}
+	public function queue_delete($p) { 
 		$q = Queue::find($p);
 		return $q->destroy();
 	}
@@ -67,12 +121,14 @@ class Services {
 	}
 
 	public function domain_add($p) { 
+		//TODO validate domain attributes..
 		$d = new Domain(array('name' => $p->name, 'type' => $p->type));
 		$d->save();
 		return $d->id;
 	}
 
 	public function queue_domain_add($p) {
+		$function = "domain_add";
 
 		if(! Domain::is_valid('name', $p->name)) { 
 			throw new Exception("Name is not valid");
@@ -90,27 +146,27 @@ class Services {
 		/*
 		 * Shouldn't be a pending (domain_add) change for this domain.
 		 */
-		if(Queue::is_pendingDomain($p->name)) { 
+		if(Queue::is_pendingDomain($p->name, $function)) { 
 			throw new Exception('Already pending change for this domain!');
 		}
 
 		$qid = new QueueItemDomain(array(
-                        'ch_date' =>  date("Y-m-d\TH:i:s"),
-                        'user_id' => '1',
-                        'function' => 'domain_add',
-                        'name' => $p->name,
-                        'master' => $p->master,
-                        'type' => $p->type));
+			'ch_date' =>  date("Y-m-d\TH:i:s"),
+			'user_id' => '1',
+			'function' => $function,
+			'name' => $p->name,
+			'master' => $p->master,
+			'type' => $p->type));
 
 		$q = Queue::get_pendingQueue($p->name);
 
 		if(!isSet($q)) {
-				$q = new Queue(array(
-					'ch_date' => date("Y-m-d\TH:i:s"),
-					'domain_name' => $p->name,
-					'archived' => '0',
-					'closed' => '0',
-					'comment' => 'Creation of new domain: '. $p->name));
+			$q = new Queue(array(
+				'ch_date' => date("Y-m-d\TH:i:s"),
+				'domain_name' => $p->name,
+				'archived' => '0',
+				'closed' => '0',
+				'comment' => 'Creation of new domain: '. $p->name));
         }
 		
 		$q->queue_item_domains_push($qid);
@@ -118,21 +174,7 @@ class Services {
 		return $q->id;
 	}
 
-	public function queue_domain_delete($p) { 
-		# Validate record (foreach ... bla bla)
-		$q = new Queue(array(
-			'change_date' => date("Y-m-d\TH:i:s"),
-			'archived' => '0',
-			'user_id' => '1',
-			'user_name' => 'henkie',
-			'function' => 'domain_delete',
-			'change' => json_encode($p),
-			));
-		$q->save();
-		return $q->id;
-	}
-
-	public function record_add($p) { 
+	public function record_add($p) {
 		$domain_id = null;
 		if ($p->domain_name != null) {
 			$d = Domain::find('first', array('conditions' => "name = '$p->domain_name'"));
@@ -182,7 +224,7 @@ class Services {
 		return $r->id;
 	}
 
-	public function queue_record_add($p) { 
+	public function queue_record_add($p) {
 		$domain_id = "";
 		$domain_name = "";
 		/*
@@ -193,7 +235,7 @@ class Services {
 			$d = Domain::find($domain_id);
 			$domain_name = $d->name;
 			$d = null;
-                } elseif (isSet($p->domain_name)) {
+		} elseif (isSet($p->domain_name)) {
 			/*
 			 * Set domain_id to init state
 			 * If we have a pending (domain_add) change for same domain as this record is for.
@@ -204,7 +246,7 @@ class Services {
 				'conditions' => 'name='. Domain::quote($domain_name)));
 			if($d->name === $domain_name) {
 				$domain_id = $d->id;
-			} elseif(Queue::is_pendingDomain($domain_name)) {
+			} elseif(Queue::is_pendingDomain($domain_name,'domain_add')) {
 				$domain_id = "init";
 				$domain_name = $p->domain_name;
 			} else {
@@ -231,26 +273,27 @@ class Services {
 			'ttl' => $p->ttl,
 			'prio' => $p->prio));
 
+
 		$result = $tempRecord->validate();
 		if($result['is_ok'] === false) {
 			throw new Exception($result['message']);
-                }
+		}
 
 		$tempRecord = null;
 
 		/*
 		 * Create queueItemRecord for new record
 		 */
-                $qir = new QueueItemRecord(array(
-                        'ch_date' => date("Y-m-d\TH:i:s"),
-                        'user_id' => '1',
-                        'function' => 'record_add',
-                        'domain_name' => $domain_name,
-                        'name' => $p->name,
-                        'type' => $p->type,
-                        'content' => $p->content,
-                        'ttl' => $p->ttl,
-                        'prio' => $p->prio));
+		$qir = new QueueItemRecord(array(
+			'ch_date' => date("Y-m-d\TH:i:s"),
+			'user_id' => '1',
+			'function' => 'record_add',
+			'domain_name' => $domain_name,
+			'name' => $p->name,
+			'type' => $p->type,
+			'content' => $p->content,
+			'ttl' => $p->ttl,
+			'prio' => $p->prio));
 		/*
 		 * Get a pending queue for same domain if there isn't any create new Queue.
 		 */
@@ -265,9 +308,9 @@ class Services {
 				'comment' => 'Adding record to domain: '. $domain_name));
 		}
 
-                $q->queue_item_records_push($qir);
-                $q->save();
-                return $q->id;
+		$q->queue_item_records_push($qir);
+		$q->save();
+		return $q->id;
 	}
 }
 

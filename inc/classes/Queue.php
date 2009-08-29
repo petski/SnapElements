@@ -51,14 +51,17 @@ class Queue extends QueueBase {
 		return $amount;
 	}
 
-	static function is_pendingDomain($domain_name = null) {
+	static function is_pendingDomain($domain_name = null, $function = null) {
 		$awnser = false;
 		$qFindResult = Queue::find('first', array(
 			'conditions' => 'commit_date IS NULL AND closed = 0 AND domain_name='
 			.Domain::quote($domain_name)));
-
-		if($qFindResult->queue_item_domains[0]->name === $domain_name) {
-			$awnser = true;
+		if(count($qFindResult->queue_item_domains) > 0) {	
+			foreach($qFindResult->queue_item_domains as $item) {
+				if($item->name === $domain_name && $item->function === $function) {
+					return $awnser = true;
+				}
+			}
 		}
 		return $awnser;
 	}
@@ -75,16 +78,17 @@ class Queue extends QueueBase {
 		return $awnser;
 	}
 
-	//TODO finish is_pendingRecord
 	static function is_pendingRecord($domain_name = null, $r = array()) {
 		$awnser = false;
 		if(count($r) > 0) {
 			$qFindResult = Queue::find('first', array(
 				'conditions' => 'commit_date IS NULL AND closed = 0 AND domain_name='
 				.Domain::quote($domain_name)));
-			foreach($qFindResult->queue_item_records as $key) {
-				if($key->name === $r->name && $key->content === $r->content && $key->type === $r->type) {
-					return $awnser = true;
+			if(count($qFindResult->queue_item_records) > 0) {	
+				foreach($qFindResult->queue_item_records as $key) {
+					if($key->name === $r->name && $key->content === $r->content && $key->type === $r->type) {
+						return $awnser = true;
+					}
 				}
 			}
 		}

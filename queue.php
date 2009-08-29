@@ -17,7 +17,7 @@ try {
 function queue_commit(id) { 
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
-				parameters: {"jsonrpc": "2.0", "method": 'queue_entry_commit', "params": id , "id": 1},
+				parameters: {"jsonrpc": "2.0", "method": 'queue_commit', "params": id , "id": 1},
 					onSuccess: function(r) {
 						var json = r.responseText.evalJSON();
 						if(json.error) {
@@ -35,7 +35,7 @@ function queue_commit(id) {
 function queue_delete(id) {
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
-			  parameters: {"jsonrpc": "2.0", "method": "queue_entry_delete", "params": id , "id": 1},
+			  parameters: {"jsonrpc": "2.0", "method": "queue_delete", "params": id , "id": 1},
 					onSuccess: function(r) {
 						var json = r.responseText.evalJSON();
 						if(json.error) {
@@ -53,7 +53,7 @@ function queue_delete(id) {
 function queue_close(id) {
 	new Ajax.Request('api/jsonrpc.php', {
                           method: 'post',
-			  parameters: {"jsonrpc": "2.0", "method": "queue_entry_close", "params": id , "id": 1},
+			  parameters: {"jsonrpc": "2.0", "method": "queue_close", "params": id , "id": 1},
 					onSuccess: function(r) {
 						var json = r.responseText.evalJSON();
 						if(json.error) {
@@ -63,6 +63,23 @@ function queue_close(id) {
 							$('tr_entry' + id).toggleClassName('queue_closed');
 							//$('action_entry' + id).update('Queue closed!');
 							$('feedback').update('Request closed').setStyle({color: 'black', display: 'block'});
+                        }
+					}});
+}
+
+function queue_open(id) {
+	new Ajax.Request('api/jsonrpc.php', {
+                          method: 'post',
+			  parameters: {"jsonrpc": "2.0", "method": "queue_open", "params": id , "id": 1},
+					onSuccess: function(r) {
+						var json = r.responseText.evalJSON();
+						if(json.error) {
+							$('feedback').update(json.error.message + ' (' + json.error.code + ')').
+							setStyle({color: 'red', display: 'block'});
+						} else {
+							$('tr_entry' + id).toggleClassName('queue_open');
+							//$('action_entry' + id).update('Queue closed!');
+							$('feedback').update('Request opened').setStyle({color: 'black', display: 'block'});
                         }
 					}});
 }
