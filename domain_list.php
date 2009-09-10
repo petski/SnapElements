@@ -2,6 +2,17 @@
 require_once('base.php');
 require_once($class_root . 'Domain.php');
 require_once($class_root . 'Queue.php');
+$char = a;
+$offset = 0;
+$rowamount = (int) $config->get('iface.rowamount');
+$start = 1;
+if(isSet($_GET["char"])) {
+	$char = $_GET["char"];
+}
+if(isSet($_GET["start"])) {
+	$offset = (($_GET["start"] - 1) * $rowamount);
+	$start = $_GET["start"];
+}
 
 print $display->header();
 ?>
@@ -46,10 +57,36 @@ if(count($qFindResult) > 0) {
 #
 #
 
-$dFindResult = Domain::find('all');
+$result = ActiveRecord::query("SELECT COUNT(*) as count FROM domains");
+$dCount = (int) $result[0]['count'];
 
-print '<div class="header">'.count($dFindResult).' domains found</div><br>';
+print '<div class="header">'.$dCount.' domains found</div><br>';
 
+$dFindResult = null;
+
+if($dCount > $rowamount) {
+	if (preg_match('/^\d/', $char)){
+		/*
+		 * select char 'j' at a reverse domain where k and l are optional
+		 * reverse domain: abc.def.ghi.jkl.in-addr.arpa
+		 * select * from domains where name REGEXP '\\.j[[:digit:]]{0,2}\\.in-addr\\.arpa'
+		 */
+		$query = "name REGEXP '\\\.".$char."[[:digit:]]{0,2}\\\.in-addr.arpa'";
+	} else {
+		$query = "name LIKE '". $char ."%'";
+	}
+	$dCount = count(Domain::find('all', array('conditions' => "$query")));
+	$dFindResult = Domain::find('all', array(
+							'limit' => "$rowamount",
+							'offset' => "$offset",
+							'conditions' => "$query"));
+	print $display->show_chars($char);
+	print "<br><br>";
+	print $display->show_pages($dCount, $rowamount,null,$char,$start);
+	print "<br><br>";
+} else {
+	$dFindResult = Domain::find('all');
+}
 
 if(count($dFindResult) > 0) {
 		print $display->domains_header();

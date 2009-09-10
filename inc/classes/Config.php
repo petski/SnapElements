@@ -23,7 +23,7 @@ class Config {
                         'dns.fancy'             => false,
                         'dns.strict_tld_check'  => true,
 
-			'jsonrpc.uri'		=> 'api/jsonrpc.php',
+						'jsonrpc.uri'		=> 'api/jsonrpc.php',
 
                         'application.version' 	=> '0.1',
                         'application.revision'	=> '$Id$',

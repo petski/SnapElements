@@ -186,7 +186,8 @@ __EOS__;
 
 	public function domain($domain = array()) { 
 		$domain = (object)$domain;
-		$amount = count($domain->records);
+		$result = ActiveRecord::query("SELECT COUNT(*) as count FROM records where domain_id=".Domain::quote($domain->id));
+		$amount = $result[0]['count'];
 		return <<< __EOS__
 		       <tr class="domain" id="tr_entry{$domain->id}">
 			       <td>$domain->name</td>
@@ -341,6 +342,110 @@ __EOS__;
 		       </tr>
 __EOS__;
 	} 
-}
 
+	/*
+	 * Display the page option: [1] [2] .. [n]
+	 */
+
+	public function show_pages($amount,$rowamount,$id=null,$char=null,$start=1) {
+		$string = "";
+		if ($amount > $rowamount) {
+
+			$string .= "Show page:<br>";
+
+			$amount_pages = ceil($amount / $rowamount);
+			$loop_start = $start - 9;
+			$loop_end = $start + 9;
+			$query = "";
+			if($id != null) {
+				$query .= "&id=$id";
+			}
+
+			if ($char != null) {
+				$query .= "&char=$char";
+			}
+
+			if($start > 1) {
+				$string .= sprintf('[ %s ]',$this->link(sprintf("%s?start=1%s", $_SERVER["PHP_SELF"], $query), 'First'));
+			} else {
+				$string .= "[ First ]";
+			}
+
+			if($loop_start < 1) {
+				$loop_start = 1;
+			}
+
+			if($loop_end > $amount_pages) {
+				$loop_end = $amount_pages;
+			}
+
+			for ($i=$loop_start;$i<=$loop_end;$i++) {
+				if ($start == $i) {
+					$string .= sprintf('[ <b>%s</b> ]',$i);
+				} else {
+					$string .= sprintf('[ %s ]',$this->link(sprintf('%s?start=%s%s',$_SERVER["PHP_SELF"],$i,$query),$i));
+				}
+			}
+
+			if($start < $amount_pages) {
+				$string .= sprintf('[ %s ]',$this->link(sprintf('%s?start=%s%s', $_SERVER["PHP_SELF"], $amount_pages, $query), 'Last'));
+			} else {
+				$string .= "[ Last ]";
+			}
+		}
+		return $string;
+	}
+
+	/*
+	 * Display the alphabetic option: [0] [1] .. [9] [a] [b] .. [z]
+	 */
+
+	public function show_chars($charstart) {
+		$string = "Show zones beginning with:<br>";
+
+		foreach (range('a','z') as $char) {
+			if ($char == $charstart) {
+				$string .= sprintf('[ %s ]',$char);
+			} elseif ($this->zone_char_start($char)) {
+				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s', $_SERVER["PHP_SELF"], $char), $char));
+			} else {
+				$string .= sprintf('[ %s ] ', $char);
+			}
+		}
+		$string .= "<br>";
+
+		foreach (range('0','9') as $char) {
+			if ($char == $charstart) {
+				$string .= sprintf('[ %s ] ', $char);
+			} elseif ($this->zone_char_start($char)) {
+				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s', $_SERVER["PHP_SELF"], $char), $char));
+			} else {
+				$string .= sprintf('[ %s ] ', $char);
+			}
+		}
+		return $string;
+	}
+
+	public function zone_char_start($char) {
+		//TODO make it possible to search for forward zones beginning met DIGIT
+		$sql_regexp = REGEXP;
+		if(preg_match('/^\d/', $char)) {
+			$query = "SELECT *
+				FROM domains
+				WHERE name REGEXP '\\.". $char ."[[:digit:]]{0,2}\\.in-addr\\.arpa' LIMIT 1";
+		} else {
+			$query = "SELECT
+				domains.id AS domain_id,
+				domains.name AS domainname
+				FROM domains
+				WHERE substring(domains.name,1,1) $sql_regexp '^$char' LIMIT 1";
+		}
+		$result = ActiveRecord::query($query);
+		if (count($result) > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
 ?>
