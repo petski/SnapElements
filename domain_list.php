@@ -6,15 +6,23 @@ $char = a;
 $offset = 0;
 $rowamount = (int) $config->get('iface.rowamount');
 $start = 1;
+
+print $display->header();
+
 if(isSet($_GET["char"])) {
-	$char = $_GET["char"];
+	if(! preg_match('/^([0-9]|[a-z]){1}$/',$_GET["char"])) {
+		print $display->error("You hacker!");
+		print $display->footer();
+		exit(1);
+	} else {
+		$char = $_GET["char"];
+	}
 }
 if(isSet($_GET["start"])) {
 	$offset = (($_GET["start"] - 1) * $rowamount);
 	$start = $_GET["start"];
 }
 
-print $display->header();
 ?>
 
 <script type="text/javascript">
