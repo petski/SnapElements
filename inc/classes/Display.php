@@ -347,7 +347,7 @@ __EOS__;
 	 * Display the page option: [1] [2] .. [n]
 	 */
 
-	public function show_pages($amount,$rowamount,$id=null,$char=null,$start=1) {
+	public function show_pages($amount,$rowamount,$id=null,$char=null,$start=1,$type=null) {
 		$string = "";
 		if ($amount > $rowamount) {
 
@@ -357,12 +357,22 @@ __EOS__;
 			$loop_start = $start - 9;
 			$loop_end = $start + 9;
 			$query = "";
+
+			/*
+			 * $id is used for record listing for a domain_id
+			 */
 			if($id != null) {
 				$query .= "&id=$id";
 			}
 
+			/*
+			 * $char is used for domain listing with char
+			 * $type is used for domain listing of type forward / reverse
+			 */
 			if ($char != null) {
-				$query .= "&char=$char";
+				if($type != null) {
+					$query .= "&char=$char&type=$type";
+				}
 			}
 
 			if($start > 1) {
@@ -403,22 +413,41 @@ __EOS__;
 	public function show_chars($charstart) {
 		$string = "Show zones beginning with:<br>";
 
-		foreach (range('a','z') as $char) {
+		/*
+		 * Get zones (forward)
+		 */
+		foreach (range('0','9') as $char) {
 			if ($char == $charstart) {
 				$string .= sprintf('[ %s ]',$char);
 			} elseif ($this->zone_char_start($char)) {
-				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s', $_SERVER["PHP_SELF"], $char), $char));
+				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char));
 			} else {
 				$string .= sprintf('[ %s ] ', $char);
 			}
 		}
+
 		$string .= "<br>";
 
+		foreach (range('a','z') as $char) {
+			if ($char == $charstart) {
+				$string .= sprintf('[ %s ]',$char);
+			} elseif ($this->zone_char_start($char)) {
+				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char));
+			} else {
+				$string .= sprintf('[ %s ] ', $char);
+			}
+		}
+		$string .= "<br><br>";
+		$string .= "Show reverse zones beginning with:<br>";
+
+		/*
+		 * Get reverse zones
+		 */
 		foreach (range('0','9') as $char) {
 			if ($char == $charstart) {
 				$string .= sprintf('[ %s ] ', $char);
-			} elseif ($this->zone_char_start($char)) {
-				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s', $_SERVER["PHP_SELF"], $char), $char));
+			} elseif ($this->reverse_zone_char_start($char)) {
+				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=reverse', $_SERVER["PHP_SELF"], $char), $char));
 			} else {
 				$string .= sprintf('[ %s ] ', $char);
 			}
@@ -427,18 +456,26 @@ __EOS__;
 	}
 
 	public function zone_char_start($char) {
-		//TODO make it possible to search for forward zones beginning met DIGIT
+		$sql_regexp = REGEXP;
+		$query = "SELECT
+				domains.id AS domain_id,
+				domains.name AS domainname
+				FROM domains
+				WHERE substring(domains.name,1,1) $sql_regexp '^$char' AND name NOT LIKE '%in-addr.arpa' LIMIT 1";
+		$result = ActiveRecord::query($query);
+		if (count($result) > 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function reverse_zone_char_start($char) {
 		$sql_regexp = REGEXP;
 		if(preg_match('/^\d/', $char)) {
 			$query = "SELECT *
 				FROM domains
 				WHERE name REGEXP '\\.". $char ."[[:digit:]]{0,2}\\.in-addr\\.arpa' LIMIT 1";
-		} else {
-			$query = "SELECT
-				domains.id AS domain_id,
-				domains.name AS domainname
-				FROM domains
-				WHERE substring(domains.name,1,1) $sql_regexp '^$char' LIMIT 1";
 		}
 		$result = ActiveRecord::query($query);
 		if (count($result) > 0) {

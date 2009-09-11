@@ -22,7 +22,7 @@ if(! preg_match('/^\d+$/',$_GET['id'])) {
 
 try {
 	$d = Domain::find($_GET['id']);
-	$result = ActiveRecord::query("SELECT COUNT(*) as count FROM records where domain_id=$d->id");
+	$result = ActiveRecord::query("SELECT COUNT(*) AS count FROM records WHERE domain_id=$d->id");
 	$rCount = (int) $result[0]['count'];
 	if($rCount > $rowamount) {
 		$findResult = Record::find('all', array(

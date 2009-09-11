@@ -3,6 +3,7 @@ require_once('base.php');
 require_once($class_root . 'Domain.php');
 require_once($class_root . 'Queue.php');
 $char = a;
+$type = "forward";
 $offset = 0;
 $rowamount = (int) $config->get('iface.rowamount');
 $start = 1;
@@ -18,6 +19,11 @@ if(isSet($_GET["char"])) {
 		$char = $_GET["char"];
 	}
 }
+
+if(isSet($_GET["type"])) {
+	$type = $_GET["type"];
+}
+
 if(isSet($_GET["start"])) {
 	$offset = (($_GET["start"] - 1) * $rowamount);
 	$start = $_GET["start"];
@@ -65,7 +71,7 @@ if(count($qFindResult) > 0) {
 #
 #
 
-$result = ActiveRecord::query("SELECT COUNT(*) as count FROM domains");
+$result = ActiveRecord::query("SELECT COUNT(*) AS count FROM domains");
 $dCount = (int) $result[0]['count'];
 
 print '<div class="header">'.$dCount.' domains found</div><br>';
@@ -73,25 +79,33 @@ print '<div class="header">'.$dCount.' domains found</div><br>';
 $dFindResult = null;
 
 if($dCount > $rowamount) {
-	if (preg_match('/^\d/', $char)){
-		/*
-		 * select char 'j' at a reverse domain where k and l are optional
-		 * reverse domain: abc.def.ghi.jkl.in-addr.arpa
-		 * select * from domains where name REGEXP '\\.j[[:digit:]]{0,2}\\.in-addr\\.arpa'
-		 */
-		$query = "name REGEXP '\\\.".$char."[[:digit:]]{0,2}\\\.in-addr.arpa'";
-	} else {
-		$query = "name LIKE '". $char ."%'";
+	$query = null;
+	if($type === "reverse") {
+		if (preg_match('/^\d/', $char)){
+			/*
+			 * select char 'j' at a reverse domain where k and l are optional
+			 * reverse domain: abc.def.ghi.jkl.in-addr.arpa
+			 * select * from domains where name REGEXP '\\.j[[:digit:]]{0,2}\\.in-addr\\.arpa'
+			 */
+			$query = "name REGEXP '\\\.".$char."[[:digit:]]{0,2}\\\.in-addr.arpa'";
+		}
+	} elseif($type === "forward") {
+		$query = "name LIKE '". $char ."%' AND NOT name LIKE '%in-addr.arpa'";
 	}
-	$dCount = count(Domain::find('all', array('conditions' => "$query")));
-	$dFindResult = Domain::find('all', array(
-							'limit' => "$rowamount",
-							'offset' => "$offset",
-							'conditions' => "$query"));
-	print $display->show_chars($char);
-	print "<br><br>";
-	print $display->show_pages($dCount, $rowamount,null,$char,$start);
-	print "<br><br>";
+
+	if($query != null) {
+		$dCount = count(Domain::find('all', array('conditions' => "$query")));
+		$dFindResult = Domain::find('all', array(
+								'limit' => "$rowamount",
+								'offset' => "$offset",
+								'conditions' => "$query"));
+		print $display->show_chars($char);
+		print "<hr>";
+		print $display->show_pages($dCount, $rowamount,null,$char,$start,$type);
+		print "<br><br>";
+	} else {
+		print "Something went wrong...";
+	}
 } else {
 	$dFindResult = Domain::find('all');
 }
