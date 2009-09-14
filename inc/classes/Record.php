@@ -97,9 +97,13 @@ class Record extends RecordBase {
 				'message' => "Initial errors array"
 			);
 		switch ($name) { 
+				case "id":
+					$errors['is_ok'] =  preg_match('/^\d+$/', $this->id) ? true : false;
+					$errors['message'] = "Id must be a positive int";
+					return $errors;
 				case "domain_id":
-					$errors['is_ok'] = true;
-					$errors['message'] = "Domain_id not validated!";
+					$errors['is_ok'] =  preg_match('/^\d+$/', $this->domain_id) ? true : false;
+					$errors['message'] = "Domain_id must be a positive int";
 					return $errors;
 				case "name":
 					$errors['is_ok'] = (strlen($this->name) > 0 && strlen($this->name) <= 255) ? true : false;
@@ -143,7 +147,7 @@ class Record extends RecordBase {
 							return $errors;
 					}
 				case "ttl":
-                                        # Do magic
+					# Do magic
 					$errors['is_ok'] =  preg_match('/^\d+$/', $this->ttl) ? true : false;
 					$errors['message'] = "TTL must be a positive int";
 					return $errors;
@@ -154,11 +158,16 @@ class Record extends RecordBase {
 							$errors['message'] = "Prio must be a positive int";	
 							return $errors;
 					}
-                                        # Remove this once all checks are in place
-                                        $errors['is_ok'] = true;
-                                        $errors['message'] = "Prio is not validated!";
-                                        return $errors;
-                                        # END Remove this once all checks are in place
+					# Remove this once all checks are in place
+					$errors['is_ok'] = true;
+					$errors['message'] = "Prio is not validated!";
+					return $errors;
+					# END Remove this once all checks are in place
+				case "change_date":
+					# Do magic
+					$errors['is_ok'] = true;
+					$errors['message'] = "Change_date is not validated!";
+					return $errors;
 
 				default: 
 					
