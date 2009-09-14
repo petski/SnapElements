@@ -42,6 +42,8 @@ try {
 print sprintf('<div class="header">%s records found for domain %s</div><br>', $rCount, $d->name);
 
 print $display->link('record_add.php?domain_id='.$d->id,'Add record');
+print "<br>";
+print $display->link('record_edit.php?id='.$d->id,'Edit record(s)');
 
 if($rCount > $rowamount) {
 	print "<br><br>";

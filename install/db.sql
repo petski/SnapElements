@@ -130,6 +130,7 @@ CREATE TABLE `queue_item_records` (
   `user_id` int(11) DEFAULT NULL,
   `function` varchar(50) COLLATE latin1_general_ci NOT NULL,
   `domain_name` varchar(255) NOT NULL,
+  `record_id` int(11) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `type` varchar(6) DEFAULT NULL,
   `content` varchar(255) DEFAULT NULL,
