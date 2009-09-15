@@ -32,18 +32,40 @@ if(isSet($_GET["start"])) {
 ?>
 
 <script type="text/javascript">
-	function domain_delete(id, name) {
-		new Ajax.Request('api/jsonrpc.php', {
-			method: 'post',
-			parameters: {"jsonrpc": "2.0", "method": 'queue_domain_delete', "params": new Hash({'name' : name}).toJSON() , "id": 1},
-			onSuccess: function(r) {
-					$('tr_entry' + id).toggleClassName('queue_commited');
-					$('action_entry' + id).update('Added removal request to queue');
+
+function domain_delete(id,name) {
+
+		var myhash = new Hash();
+        myhash.set('id', id);
+        myhash.set('name', name);
+
+        var params = myhash.toJSON();
+
+
+    new Ajax.Request('api/jsonrpc.php', {
+            method: 'post',
+            parameters: {"jsonrpc": "2.0", "method": 'queue_domain_delete', "params": params , "id": 1},
+            onSuccess: function(r) {
+                var json = r.responseText.evalJSON();
+                if(json.error) {
+                    $('feedback').update(json.error.message + ' (' + json.error.code + ')').
+                    setStyle({color: 'red', display: 'block'});
+                } else {
+					$('tr_entry' + id).toggleClassName('domain');
+					$('action_entry' + id).update('Added to queue');
 					queue_counter();
-			}
-		});
-	}
+					$('feedback').update('Domain added to queue for deletion').setStyle({color: 'black', display: 'block'});
+                }
+            }});
+}
+
+
 </script>
+
+<div id="feedback" style="display: none;"></div>
+
+<br>
+
 
 <?php
 

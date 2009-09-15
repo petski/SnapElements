@@ -102,7 +102,7 @@ class Record extends RecordBase {
 					$errors['message'] = "Id must be a positive int";
 					return $errors;
 				case "domain_id":
-					$errors['is_ok'] =  preg_match('/^\d+$/', $this->domain_id) ? true : false;
+					$errors['is_ok'] =  true; //preg_match('/^\d+$/', $this->domain_id) ? true : false;
 					$errors['message'] = "Domain_id must be a positive int";
 					return $errors;
 				case "name":

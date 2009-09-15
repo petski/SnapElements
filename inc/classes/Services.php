@@ -19,12 +19,12 @@ class Services {
 		/*
 		 * Find out if we received var domain_id or domain_name
 		 */
-		if(isSet($p->domain_id)) {
+		if($p->domain_id != NULL) {
 			$domain_id = $p->domain_id;
 			$d = Domain::find($domain_id);
 			$domain_name = $d->name;
 			$d = NULL;
-		} elseif (isSet($p->domain_name)) {
+		} elseif ($p->domain_name != NULL) {
 			/*
 			 * Set domain_id to init state
 			 * If we have a pending (domain_add) change for same domain as this record is for.
@@ -114,7 +114,19 @@ class Services {
 	public function queue_commit($p) {
 		$q = Queue::find($p);
 		if($q != NULL) {
-			foreach(array_merge($q->queue_item_domains,$q->queue_item_records) as $item) {
+			//TODO FIX this nasty query hack thingy...
+			// Adding domains must come first , than adding records ot it,
+			// but deleting records must come first , than deleting domain.
+			$query1 = "queue_item_domains";
+			$query2 = "queue_item_records";
+			foreach($q->queue_item_domains as $item) {
+				if($item->function === "domain_delete") {
+					$query1 = "queue_item_records";
+					$query2 = "queue_item_domains";
+				}
+			}
+
+			foreach(array_merge($q->$query1,$q->$query2) as $item) {
 				$method = $item->function;
 				if(method_exists($this, $method)) {
 					if($item->commit_date === NULL) {
@@ -136,7 +148,9 @@ class Services {
 			 * Queue is finished update SOA record for domain
 			 */
 			$d = Domain::find('first', array('conditions' => "name = '$q->domain_name'"));
-			$d->update_soa_record();
+			if($d != NULL) {
+				$d->update_soa_record();
+			}
 			return true;
 		} else {
 			return false;
@@ -271,6 +285,64 @@ class Services {
 		$q->queue_item_domains_push($qid);
 		$q->save();
 		return $q->id;
+	}
+
+	public function queue_domain_delete($p) {
+		$function = "domain_delete";
+
+		if(! Domain::is_valid('name', $p->name)) {
+			throw new Exception("Name is not valid");
+		}
+
+		# Should be a existing domain
+		$d = Domain::find('first', array('conditions' => 'id = '.Domain::quote($p->id).' AND name = '.Domain::quote($p->name)));
+		if($d == NULL) {
+			throw new Exception("Domain doesn't  exists!");
+		}
+
+		/*
+		 * Shouldn't be a pending (domain_add) change for this domain.
+		 */
+		if(Queue::is_pendingDomain($p->name, $function)) {
+			throw new Exception('Already pending change for this domain!');
+		}
+
+		$qid = new QueueItemDomain(array(
+			'ch_date' =>  date("Y-m-d\TH:i:s"),
+			'user_id' => '1',
+			'function' => $function,
+			'name' => $d->name,
+			'master' => $d->master,
+			'type' => $d->type));
+
+		$q = Queue::get_pendingQueue($p->name);
+
+		if(!isSet($q)) {
+			$q = new Queue(array(
+				'ch_date' => date("Y-m-d\TH:i:s"),
+				'domain_name' => $p->name,
+				'archived' => '0',
+				'closed' => '0',
+				'comment' => 'Deletion of domain: '. $p->name));
+        }
+
+		$q->queue_item_domains_push($qid);
+		$q->save();
+
+		/*
+		 * Add all records for this domain to queue for deletion
+		 */
+		foreach($d->records as $record) {
+			$this->queue_record_delete($record);
+		}
+
+		return $q->id;
+	}
+
+	public function domain_delete($p) {
+		$d =Domain::find('first', array('conditions' => 'name = '.Domain::quote($p->name)));
+		$d->destroy();
+		return true;
 	}
 
 	public function record_add($p) {
@@ -448,6 +520,82 @@ class Services {
 				'archived' => '0',
 				'closed' => '0',
 				'comment' => 'Editing record for domain: '. $domain_name));
+		}
+
+		$q->queue_item_records_push($qir);
+		$q->save();
+		return $q->id;
+	}
+
+	public function record_delete($p) {
+		$dDeps = $this->get_DepsBeforeCommit($p);
+		$domain_id = $dDeps["domain_id"];
+
+		/*
+		 * Check if we received record_id else it's not possible to edit this record
+		 */
+		if($p->record_id != NULL) {
+			$record_id = $p->record_id;
+		} else {
+			throw new Exception('Unable to remove this record, no valid record_id!');
+		}
+
+		$r = Record::find($p->record_id);
+		$r->destroy();
+		return true;
+	}
+
+	public function queue_record_delete($p) {
+		/*
+		 * Find out if we received var domain_id or domain_name
+		 */
+
+		$dDeps = $this->get_DepsBeforeQueue($p);
+		$domain_id = $dDeps["domain_id"];
+		$domain_name = $dDeps["domain_name"];
+		$record_id = NULL;
+		/*
+		 * Check if we received record_id else it's not possible to edit this record
+		 */
+		if($p->id != NULL) {
+			$record_id = $p->id;
+		} else {
+			throw new Exception('Unable to queue this record, no valid record_id!');
+		}
+
+		/*
+		 * Check for same pending record change
+		 */
+		if(Queue::is_pendingRecord($domain_name,$p)) {
+			throw new Exception('Already pending change for this record!');
+		}
+
+		/*
+		 * Create queueItemRecord for deletion of this record
+		 */
+		$qir = new QueueItemRecord(array(
+			'ch_date' => date("Y-m-d\TH:i:s"),
+			'user_id' => '1',
+			'function' => 'record_delete',
+			'domain_name' => $domain_name,
+			'record_id' => $record_id,
+			'name' => $p->name,
+			'type' => $p->type,
+			'content' => $p->content,
+			'ttl' => $p->ttl,
+			'prio' => $p->prio));
+		/*
+		 * Get a pending queue for same domain if there isn't any create new Queue.
+		 */
+		$q = Queue::get_pendingQueue($domain_name);
+
+		if(!isSet($q)) {
+			$q = new Queue(array(
+				'ch_date' => date("Y-m-d\TH:i:s"),
+				'domain_name' => $domain_name,
+				'archived' => '0',
+				'closed' => '0',
+				'comment' => 'Deleting record(s) for domain: '. $domain_name));
 		}
 
 		$q->queue_item_records_push($qir);
