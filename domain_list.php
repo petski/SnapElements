@@ -2,31 +2,25 @@
 require_once('base.php');
 require_once($class_root . 'Domain.php');
 require_once($class_root . 'Queue.php');
-$char = a;
-$type = "forward";
-$offset = 0;
+
 $rowamount = (int) $config->get('iface.rowamount');
-$start = 1;
+
+# Get input vars (or set to some default)
+$char = isSet($_GET["char"]) ? $_GET["char"] : 'a';
+$type = isSet($_GET["type"]) ? $_GET["type"] : 'forward';
+$offset = isSet($_GET["start"]) ? ($_GET["start"] - 1) * $rowamount : 0;
+$start = isSet($_GET["start"]) ? $_GET["start"] : 1;
 
 print $display->header();
 
-if(isSet($_GET["char"])) {
-	if(! preg_match('/^([0-9]|[a-z]){1}$/',$_GET["char"])) {
-		print $display->error("You hacker!");
-		print $display->footer();
-		exit(1);
-	} else {
-		$char = $_GET["char"];
-	}
-}
-
-if(isSet($_GET["type"])) {
-	$type = $_GET["type"];
-}
-
-if(isSet($_GET["start"])) {
-	$offset = (($_GET["start"] - 1) * $rowamount);
-	$start = $_GET["start"];
+# Input validation
+if(	! preg_match('/^[0-9a-z]{1}$/i',$char) ||
+	! preg_match('/^(?:forward|reverse)$/', $type) ||
+	! preg_match('/^\d+$/', $offset) ||
+	! preg_match('/^\d+$/', $start)) { 
+	print $display->error("You hacker!");
+	print $display->footer();
+	exit(1);
 }
 
 ?>
@@ -98,36 +92,48 @@ $dCount = (int) $result[0]['count'];
 
 print '<div class="header">'.$dCount.' domains found</div><br>';
 
-$dFindResult = null;
-
 if($dCount > $rowamount) {
-	$query = null;
-	if($type === "reverse") {
-		if (preg_match('/^\d/', $char)){
+	switch ($type) {
+		case "reverse": 
+			if(! preg_match('/^\d/', $char)) {
+				die("Reverse only works with numeric values");
+			}
 			/*
 			 * select char 'j' at a reverse domain where k and l are optional
 			 * reverse domain: abc.def.ghi.jkl.in-addr.arpa
 			 * select * from domains where name REGEXP '\\.j[[:digit:]]{0,2}\\.in-addr\\.arpa'
 			 */
-			$query = "name REGEXP '\\\.".$char."[[:digit:]]{0,2}\\\.in-addr.arpa'";
-		}
-	} elseif($type === "forward") {
-		$query = "name LIKE '". $char ."%' AND NOT name LIKE '%in-addr.arpa'";
+			$condition = "name REGEXP '\\\.".$char."[[:digit:]]{0,2}\\\.in-addr.arpa'";
+			break;
+		case "forward":
+			$condition = "name LIKE '". $char ."%' AND NOT name LIKE '%in-addr.arpa'";
+			break;
+		# No need to define a default, because input is checked elsewhere
 	}
 
-	if($query != null) {
-		$dCount = count(Domain::find('all', array('conditions' => "$query")));
-		$dFindResult = Domain::find('all', array(
-								'limit' => "$rowamount",
-								'offset' => "$offset",
-								'conditions' => "$query"));
-		print $display->show_chars($char);
-		print "<hr>";
-		print $display->show_pages($dCount, $rowamount,null,$char,$start,$type);
-		print "<br><br>";
-	} else {
-		print "Something went wrong...";
+	$dCount = count(Domain::find('all', array('conditions' => $conditions)));
+	$dFindResult = Domain::find('all', array(
+							'limit' => $rowamount,
+							'offset' => $offset,
+							'conditions' => $conditions));
+
+	$domain_start_chars = Domain::domain_start_chars();
+	foreach (array_merge(range(0,9), range('a','z')) as $char) {
+		$fwlinks .= sprintf('[ %s ]', in_array($char, $domain_start_chars) ? 
+					$display->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char) : $char);
 	}
+
+	$reverse_start_chars = Domain::reverse_start_chars();
+	foreach (range(0,9) as $char) {
+		$rvlinks .= sprintf('[ %s ]', in_array($char, $reverse_start_chars) ? 
+					$display->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char) : $char);
+	}
+	printf("Forward: %s<br>Reverse: %s<br>", $fwlinks, $rvlinks);
+
+	print "<hr>";
+	print $display->show_pages($dCount, $rowamount,null,$char,$start,$type);
+	print "<br><br>";
+
 } else {
 	$dFindResult = Domain::find('all');
 }

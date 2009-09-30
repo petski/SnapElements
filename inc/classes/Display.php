@@ -1,8 +1,6 @@
 <?php
 
 require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR. 'string.php');
-require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Domain.php';
-require_once dirname(__FILE__) .DIRECTORY_SEPARATOR. 'Record.php';
 
 class Display {
 
@@ -184,15 +182,13 @@ __EOS__;
 		return $this->table_footer();
 	} 
 
-	public function domain($domain = array()) { 
-		$domain = (object)$domain;
-		$result = ActiveRecord::query("SELECT COUNT(*) as count FROM records where domain_id=".Domain::quote($domain->id));
-		$amount = $result[0]['count'];
+	public function domain($domain) {
+		$record_count = $domain->record_count();
 		return <<< __EOS__
 		       <tr class="domain" id="tr_entry{$domain->id}">
 			       <td>$domain->name</td>
 			       <td>$domain->type</td>
-			       <td>$amount</td>
+			       <td>$record_count</td>
 			       <td>xx</td>
 			       <td id="action_entry{$domain->id}">
 				       {$this->link('domain_edit.php?id='.$domain->id,$this->button('edit'))}
@@ -406,83 +402,5 @@ __EOS__;
 		return $string;
 	}
 
-	/*
-	 * Display the alphabetic option: [0] [1] .. [9] [a] [b] .. [z]
-	 */
-
-	public function show_chars($charstart) {
-		$string = "Show zones beginning with:<br>";
-
-		/*
-		 * Get zones (forward)
-		 */
-		foreach (range('0','9') as $char) {
-			if ($char == $charstart) {
-				$string .= sprintf('[ %s ]',$char);
-			} elseif ($this->zone_char_start($char)) {
-				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char));
-			} else {
-				$string .= sprintf('[ %s ] ', $char);
-			}
-		}
-
-		$string .= "<br>";
-
-		foreach (range('a','z') as $char) {
-			if ($char == $charstart) {
-				$string .= sprintf('[ %s ]',$char);
-			} elseif ($this->zone_char_start($char)) {
-				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=forward', $_SERVER["PHP_SELF"], $char), $char));
-			} else {
-				$string .= sprintf('[ %s ] ', $char);
-			}
-		}
-		$string .= "<br><br>";
-		$string .= "Show reverse zones beginning with:<br>";
-
-		/*
-		 * Get reverse zones
-		 */
-		foreach (range('0','9') as $char) {
-			if ($char == $charstart) {
-				$string .= sprintf('[ %s ] ', $char);
-			} elseif ($this->reverse_zone_char_start($char)) {
-				$string .= sprintf('[ %s ]', $this->link(sprintf('%s?char=%s&type=reverse', $_SERVER["PHP_SELF"], $char), $char));
-			} else {
-				$string .= sprintf('[ %s ] ', $char);
-			}
-		}
-		return $string;
-	}
-
-	public function zone_char_start($char) {
-		$sql_regexp = REGEXP;
-		$query = "SELECT
-				domains.id AS domain_id,
-				domains.name AS domainname
-				FROM domains
-				WHERE substring(domains.name,1,1) $sql_regexp '^$char' AND name NOT LIKE '%in-addr.arpa' LIMIT 1";
-		$result = ActiveRecord::query($query);
-		if (count($result) > 0) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public function reverse_zone_char_start($char) {
-		$sql_regexp = REGEXP;
-		if(preg_match('/^\d/', $char)) {
-			$query = "SELECT *
-				FROM domains
-				WHERE name REGEXP '\\.". $char ."[[:digit:]]{0,2}\\.in-addr\\.arpa' LIMIT 1";
-		}
-		$result = ActiveRecord::query($query);
-		if (count($result) > 0) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 }
 ?>

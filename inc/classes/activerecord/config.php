@@ -1,11 +1,13 @@
 <?php
 
+require_once(dirname(__FILE__) .DIRECTORY_SEPARATOR. '..' .DIRECTORY_SEPARATOR. '..' .DIRECTORY_SEPARATOR. '..' .DIRECTORY_SEPARATOR. 'base.php');
+
 define('AR_ADAPTER', 'MySQL'); // could be 'PDO'
 define('AR_DRIVER',  'mysql');
-define('AR_HOST',    '<your_host>');
-define('AR_DB',      '<your_db>');
-define('AR_USER',    '<your_dbuser>');
-define('AR_PASS',    '<your_secret>');
+define('AR_HOST',    $config->get('db.host'));
+define('AR_DB',      $config->get('db.name'));
+define('AR_USER',    $config->get('db.user'));
+define('AR_PASS',    $config->get('db.pass'));
 
 #define('AR_PREFIX', 'prefix_');
 

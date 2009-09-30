@@ -9,7 +9,7 @@ class Config {
 
                         'iface.lang'            => 'en_EN',
                         'iface.style'           => 'default',
-                        'iface.rowamount'       => '50',
+                        'iface.rowamount'       => '5',
                         'iface.expire'          => '1800',
 
                         'dns.hostmaster'        => 'postmaster',

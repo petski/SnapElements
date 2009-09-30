@@ -144,6 +144,30 @@ class Domain extends DomainBase {
 				return false;
 		}
 	}
+
+	public function record_count() {
+		$result = Domain::get_all(array('conditions' => 'd.name='.Domain::quote($this->name)));
+		return $result[0]['record_count'];
+	}
+
+	static public function domain_start_chars() {
+		$results = ActiveRecord::query("SELECT SUBSTRING(d.name, 1, 1) AS 'chr' FROM domains d WHERE d.name NOT LIKE '%in-addr.arpa' GROUP BY 1");
+		$return = array();
+		foreach($results as $result) {
+			array_push($return, $result['chr']);
+		}
+		return $return;
+	}
+
+	static public function reverse_start_chars() {
+		$results = ActiveRecord::query(
+				"SELECT SUBSTRING(d.name, 1, 1) AS 'chr' FROM domains d WHERE d.name REGEXP '[[:digit:]]{1,3}\\.in-addr\\.arpa' GROUP BY 1");
+		$return = array();
+		foreach($results as $result) {
+			array_push($return, $result['chr']);
+		}
+		return $return;
+	}
 }
 
 ?>
