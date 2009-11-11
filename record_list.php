@@ -3,33 +3,36 @@ require_once('base.php');
 require_once($class_root . 'Domain.php');
 require_once($class_root . 'Record.php');
 
-$offset = 0;
 $rowamount = (int) $config->get('iface.rowamount');
-$start = 1;
-if(isSet($_GET["start"])) {
-    $offset = (($_GET["start"] - 1) * $rowamount);
-    $start = $_GET["start"];
-}
+
+# Get input vars (or set to some default)
+$offset = isSet($_GET["start"]) ? ($_GET["start"] - 1) * $rowamount : 0;
+$start = isSet($_GET["start"]) ? $_GET["start"] : 1;
+$domain_id = isSet($_GET['id']) ? $_GET['id'] : 0;
+
 
 
 print $display->header();
 
-if(! preg_match('/^\d+$/',$_GET['id'])) {
-	print $display->error("You hacker!");
-	print $display->footer();
-	exit(1);
+# Input validation
+if(     ! preg_match('/^\d+$/', $domain_id) ||
+        ! preg_match('/^\d+$/', $offset) ||
+        ! preg_match('/^\d+$/', $start)) {
+        print $display->error("You hacker!");
+        print $display->footer();
+        exit(1);
 }
 
 try {
-	$d = Domain::find($_GET['id']);
+	$d = Domain::find($domain_id);
 	$result = ActiveRecord::query("SELECT COUNT(*) AS count FROM records WHERE domain_id=$d->id");
 	$rCount = (int) $result[0]['count'];
 	if($rCount > $rowamount) {
 		$findResult = Record::find('all', array(
-								'limit' => "$rowamount",
-								'offset' => "$offset",
-								'conditions' => 'domain_id = '.Record::quote($d->id),
-								'order' => 'name'));
+			'limit' => "$rowamount",
+			'offset' => "$offset",
+			'conditions' => 'domain_id = '.Record::quote($d->id),
+			'order' => 'name'));
 	} else {
 		$findResult = Record::find('all', array('conditions' => 'domain_id = '.Record::quote($d->id), 'order' => 'name'));
 	}
