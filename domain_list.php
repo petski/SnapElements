@@ -93,6 +93,7 @@ $dCount = (int) $result[0]['count'];
 print '<div class="header">'.$dCount.' domains found</div><br>';
 
 if($dCount > $rowamount) {
+	$condition = NULL;
 	switch ($type) {
 		case "reverse": 
 			if(! preg_match('/^\d/', $char)) {
@@ -111,11 +112,13 @@ if($dCount > $rowamount) {
 		# No need to define a default, because input is checked elsewhere
 	}
 
-	$dCount = count(Domain::find('all', array('conditions' => $conditions)));
-	$dFindResult = Domain::find('all', array(
-							'limit' => $rowamount,
-							'offset' => $offset,
-							'conditions' => $conditions));
+	if($condition != NULL) {
+		$dCount = count(Domain::find('all', array('conditions' => $condition)));
+		$dFindResult = Domain::find('all', array(
+			'limit' => $rowamount,
+			'offset' => $offset,
+			'conditions' => $condition));
+	}
 
 	$domain_start_chars = Domain::domain_start_chars();
 	foreach (array_merge(range(0,9), range('a','z')) as $char) {
